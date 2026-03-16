@@ -1,0 +1,108 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap');
+
+:root {
+  --bg: #0e0e10;
+  --bg2: #161618;
+  --bg3: #1e1e22;
+  --bg4: #252529;
+  --gold: #c9a84c;
+  --gold-dim: rgba(201,168,76,0.12);
+  --gold-border: rgba(201,168,76,0.3);
+  --gold-bright: rgba(201,168,76,0.7);
+  --biz: #4c8fc9;
+  --biz-dim: rgba(76,143,201,0.12);
+  --biz-border: rgba(76,143,201,0.3);
+  --white: #f5f5f5;
+  --white-dim: rgba(245,245,245,0.5);
+  --white-faint: rgba(245,245,245,0.07);
+  --border: rgba(245,245,245,0.08);
+  --danger: #e05555;
+  --success: #4caf7d;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--white);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 { font-family: 'Playfair Display', serif; }
+
+a { color: var(--gold); text-decoration: none; }
+a:hover { opacity: 0.8; }
+
+button { font-family: 'DM Sans', sans-serif; cursor: pointer; }
+
+input, textarea {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg3);
+  border: 0.5px solid var(--border);
+  color: var(--white);
+  border-radius: 6px;
+  padding: 12px 16px;
+  font-size: 14px;
+  outline: none;
+  transition: border 0.18s;
+  width: 100%;
+}
+input:focus, textarea:focus { border-color: var(--gold-border); }
+input::placeholder, textarea::placeholder { color: var(--white-dim); }
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.btn-primary {
+  background: var(--gold);
+  color: #0e0e10;
+  border: none;
+  border-radius: 4px;
+  padding: 13px 28px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: opacity 0.18s;
+  display: inline-block;
+  text-align: center;
+}
+.btn-primary:hover { opacity: 0.85; }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--gold);
+  border: 0.5px solid var(--gold-border);
+  border-radius: 4px;
+  padding: 11px 24px;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  transition: background 0.18s;
+}
+.btn-ghost:hover { background: var(--gold-dim); }
+
+.card {
+  background: var(--bg2);
+  border: 0.5px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.label {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-weight: 500;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-up { animation: fadeUp 0.5s ease both; }
