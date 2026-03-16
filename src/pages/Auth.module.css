@@ -1,0 +1,77 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.card {
+  background: var(--bg2);
+  border: 0.5px solid var(--border);
+  border-radius: 12px;
+  padding: 40px 36px;
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+  animation: fadeUp 0.5s ease both;
+}
+
+.logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--white);
+  letter-spacing: 0.06em;
+  display: block;
+  margin-bottom: 8px;
+  text-decoration: none;
+}
+.logo span { color: var(--gold); }
+
+.sub {
+  font-size: 13px;
+  color: var(--white-dim);
+  margin-bottom: 28px;
+  letter-spacing: 0.04em;
+}
+
+.form { text-align: left; }
+
+.field { margin-bottom: 16px; }
+.field label {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--white-dim);
+  margin-bottom: 6px;
+}
+
+.error {
+  background: rgba(224,85,85,0.1);
+  border: 0.5px solid rgba(224,85,85,0.3);
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--danger);
+  margin-bottom: 14px;
+}
+
+.submitBtn {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.switch {
+  font-size: 13px;
+  color: var(--white-dim);
+  margin-top: 20px;
+}
+
+.note {
+  font-size: 11px;
+  color: var(--white-faint);
+  margin-top: 12px;
+  letter-spacing: 0.04em;
+}
