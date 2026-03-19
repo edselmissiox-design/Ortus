@@ -34,7 +34,7 @@
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.1em;
-  padding: 6px 16px;
+  padding: 6px 14px;
   border: none;
   border-radius: 4px;
   background: transparent;
@@ -43,8 +43,10 @@
 }
 .modeBiz { color: var(--biz); }
 .modeBrand { color: var(--gold); }
+.modeBuilder { color: #a78bfa; }
 .modeActive.modeBiz { background: var(--biz-dim); border: 0.5px solid var(--biz-border); }
 .modeActive.modeBrand { background: var(--gold-dim); border: 0.5px solid var(--gold-border); }
+.modeActive.modeBuilder { background: rgba(167,139,250,0.12); border: 0.5px solid rgba(167,139,250,0.3); }
 .topRight { display: flex; gap: 8px; }
 .iconBtn {
   background: transparent;
@@ -109,6 +111,7 @@
 .cat:hover { color: var(--white); }
 .catActiveBiz { border-color: var(--biz-border); color: var(--biz); background: var(--biz-dim); }
 .catActiveBrand { border-color: var(--gold-border); color: var(--gold); background: var(--gold-dim); }
+.catActiveBuilder { border-color: rgba(167,139,250,0.3); color: #a78bfa; background: rgba(167,139,250,0.12); }
 .chat {
   flex: 1;
   overflow-y: auto;
@@ -134,6 +137,7 @@
 }
 .avatarBiz { background: var(--biz-dim); border: 0.5px solid var(--biz-border); color: var(--biz); }
 .avatarBrand { background: var(--gold-dim); border: 0.5px solid var(--gold-border); color: var(--gold); }
+.avatarBuilder { background: rgba(167,139,250,0.12); border: 0.5px solid rgba(167,139,250,0.3); color: #a78bfa; }
 .avatarUser { background: var(--white-faint); border: 0.5px solid rgba(245,245,245,0.15); color: var(--white-dim); }
 .msgBody { flex: 1; max-width: 80%; }
 .msgName {
@@ -145,6 +149,7 @@
 }
 .nameBiz { color: var(--biz); }
 .nameBrand { color: var(--gold); }
+.nameBuilder { color: #a78bfa; }
 .userMsg .msgName { text-align: right; }
 .bubble {
   padding: 12px 16px;
@@ -178,6 +183,7 @@
 }
 .outputBiz::before { background: var(--biz); }
 .outputBrand::before { background: var(--gold); }
+.outputBuilder::before { background: #a78bfa; }
 .outputLabel {
   font-size: 9px;
   letter-spacing: 0.2em;
@@ -187,6 +193,7 @@
 }
 .labelBiz { color: var(--biz); }
 .labelBrand { color: var(--gold); }
+.labelBuilder { color: #a78bfa; }
 .outputText {
   font-size: 13px;
   line-height: 1.8;
@@ -218,6 +225,8 @@
 .actBiz:hover { background: var(--biz-dim); }
 .actBrand { border: 0.5px solid var(--gold-border); color: var(--gold); }
 .actBrand:hover { background: var(--gold-dim); }
+.actBuilder { border: 0.5px solid rgba(167,139,250,0.3); color: #a78bfa; }
+.actBuilder:hover { background: rgba(167,139,250,0.12); }
 .typing {
   display: flex;
   align-items: center;
@@ -238,6 +247,7 @@
 .typing span:nth-child(3) { animation-delay: 0.4s; }
 .typingBiz span { background: var(--biz); }
 .typingBrand span { background: var(--gold); }
+.typingBuilder span { background: #a78bfa; }
 @keyframes blink {
   0%, 80%, 100% { opacity: 0.2; }
   40% { opacity: 1; }
@@ -265,6 +275,7 @@
 }
 .inputBiz:focus { border-color: var(--biz-border); }
 .inputBrand:focus { border-color: var(--gold-border); }
+.inputBuilder:focus { border-color: rgba(167,139,250,0.3); }
 .sendBtn {
   width: 44px;
   height: 44px;
@@ -280,7 +291,37 @@
 .sendBtn svg { width: 15px; height: 15px; }
 .sendBiz { background: var(--biz); color: #fff; }
 .sendBrand { background: var(--gold); color: #0e0e10; }
+.sendBuilder { background: #a78bfa; color: #0e0e10; }
 .sendBtn:hover:not(:disabled) { opacity: 0.82; }
+.previewOverlay {
+  position: absolute;
+  inset: 0;
+  background: var(--bg);
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+}
+.previewHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 0.5px solid var(--border);
+  flex-shrink: 0;
+}
+.previewTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: #a78bfa;
+  letter-spacing: 0.06em;
+}
+.previewActions { display: flex; gap: 8px; align-items: center; }
+.previewFrame {
+  flex: 1;
+  border: none;
+  width: 100%;
+  background: white;
+}
 .drawer {
   position: absolute;
   top: 0;
