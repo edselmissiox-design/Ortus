@@ -372,3 +372,9 @@
   border-radius: 8px;
   margin-bottom: 8px;
   cursor: pointer
+}
+.historyItem:hover { background: var(--bg3); }
+.historyMode { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 4px; }
+.historyPrompt { font-size: 13px; color: var(--white-dim); line-height: 1.5; margin-bottom: 6px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.historyDate { font-size: 11px; color: rgba(245,245,245,0.25); }
+.emptyNote { font-size: 13px; color: var(--white-dim); text-align: center; padding: 24px 0; }
