@@ -1,3 +1,5 @@
+import React from 'react'
+import ReactDOM from 'react-dom/client'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './lib/AuthContext'
 import Landing from './pages/Landing'
@@ -8,10 +10,8 @@ import './styles/global.css'
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
   if (loading) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 28, color: '#c9a84c', letterSpacing: '0.1em' }}>
-        ORT<span style={{ opacity: 0.6 }}>US</span>
-      </div>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0e0e10' }}>
+      <div style={{ fontFamily: 'serif', fontSize: 28, color: '#c9a84c', letterSpacing: '0.1em' }}>ORTUS</div>
     </div>
   )
   return user ? children : <Navigate to="/login" replace />
@@ -23,7 +23,7 @@ function PublicRoute({ children }) {
   return user ? <Navigate to="/app" replace /> : children
 }
 
-export default function Root() {
+function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
@@ -38,3 +38,6 @@ export default function Root() {
     </AuthProvider>
   )
 }
+
+const root = ReactDOM.createRoot(document.getElementById('root'))
+root.render(<App />)
