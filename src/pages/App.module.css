@@ -397,3 +397,16 @@
 .modeBrandActive { background: linear-gradient(180deg, rgba(201,168,76,0.04) 0%, var(--bg) 300px); }
 .modeBuilderActive { background: linear-gradient(180deg, rgba(167,139,250,0.04) 0%, var(--bg) 300px); }
 .modeKnowledgeActive { background: linear-gradient(180deg, rgba(52,211,153,0.04) 0%, var(--bg) 300px); }
+.liveUrl {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: rgba(167,139,250,0.1);
+  border: 0.5px solid rgba(167,139,250,0.3);
+  border-radius: 6px;
+  font-size: 12px;
+  color: #a78bfa;
+}
+.liveUrl a {
+  color: #a78bfa;
+  text-decoration: underline;
+}
