@@ -11,6 +11,13 @@ const BRAND_CATS = ['Brand Identity', 'Social Content', 'Ad Copy', 'Brand Voice'
 const BUILDER_CATS = ['Landing Page', 'Business Website', 'Portfolio', 'E-commerce', 'App UI', 'Dashboard', 'Full Stack App']
 const KNOWLEDGE_CATS = ['Universe & Space', 'Science & Physics', 'History & Philosophy', 'Technology & AI', 'Business & Economy', 'Mathematics', 'Health & Biology']
 
+const MODE_CONFIG = {
+  biz: { label: 'Business', icon: '📊', color: 'Biz', placeholder: 'e.g. Build me an investor pitch for a fragrance brand raising £500k...' },
+  brand: { label: 'Brand', icon: '✦', color: 'Brand', placeholder: 'e.g. Create a complete brand identity for a luxury streetwear label...' },
+  builder: { label: 'Builder', icon: '🏗️', color: 'Builder', placeholder: 'e.g. Build me a stunning landing page for a fragrance brand called Missiox...' },
+  knowledge: { label: 'Knowledge', icon: '🌍', color: 'Knowledge', placeholder: 'e.g. Explain how the universe was created and what existed before the Big Bang...' }
+}
+
 export default function AppPage() {
   const { user, isPro, trialLeft, canGenerate, refreshPlan } = useAuth()
   const navigate = useNavigate()
@@ -23,101 +30,40 @@ export default function AppPage() {
   const [showHistory, setShowHistory] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
   const [previewCode, setPreviewCode] = useState('')
+  const [previewUrl, setPreviewUrl] = useState('')
+  const [deploying, setDeploying] = useState(false)
   const [history, setHistory] = useState([])
   const [promptsUsed, setPromptsUsed] = useState(0)
   const chatRef = useRef(null)
 
   useEffect(() => {
     if (!user) { navigate('/login'); return }
-    addMessage('ai', 'Welcome to Ortus. Four powerful AI modes: Business, Brand, Builder and Knowledge. Select a mode and category, then tell me what you need.')
+    addMessage('ai', `Welcome to Ortus${user?.user_metadata?.full_name ? ', ' + user.user_metadata.full_name.split(' ')[0] : ''}. I am your super intelligent AI platform. Four powerful modes: Business, Brand, Builder and Knowledge. What would you like to create today?`)
   }, [user])
 
   useEffect(() => {
     if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight
   }, [messages])
 
-  const getActiveStyle = (m) => {
-    if (m === 'biz') return styles.catActiveBiz
-    if (m === 'brand') return styles.catActiveBrand
-    if (m === 'builder') return styles.catActiveBuilder
-    return styles.catActiveKnowledge
-  }
+  const c = (name) => styles[name] || ''
 
-  const getAvatarStyle = (m) => {
-    if (m === 'biz') return styles.avatarBiz
-    if (m === 'brand') return styles.avatarBrand
-    if (m === 'builder') return styles.avatarBuilder
-    return styles.avatarKnowledge
-  }
-
-  const getNameStyle = (m) => {
-    if (m === 'biz') return styles.nameBiz
-    if (m === 'brand') return styles.nameBrand
-    if (m === 'builder') return styles.nameBuilder
-    return styles.nameKnowledge
-  }
-
-  const getOutputStyle = (m) => {
-    if (m === 'biz') return styles.outputBiz
-    if (m === 'brand') return styles.outputBrand
-    if (m === 'builder') return styles.outputBuilder
-    return styles.outputKnowledge
-  }
-
-  const getLabelStyle = (m) => {
-    if (m === 'biz') return styles.labelBiz
-    if (m === 'brand') return styles.labelBrand
-    if (m === 'builder') return styles.labelBuilder
-    return styles.labelKnowledge
-  }
-
-  const getActStyle = (m) => {
-    if (m === 'biz') return styles.actBiz
-    if (m === 'brand') return styles.actBrand
-    if (m === 'builder') return styles.actBuilder
-    return styles.actKnowledge
-  }
-
-  const getTypingStyle = (m) => {
-    if (m === 'biz') return styles.typingBiz
-    if (m === 'brand') return styles.typingBrand
-    if (m === 'builder') return styles.typingBuilder
-    return styles.typingKnowledge
-  }
-
-  const getSendStyle = (m) => {
-    if (m === 'biz') return styles.sendBiz
-    if (m === 'brand') return styles.sendBrand
-    if (m === 'builder') return styles.sendBuilder
-    return styles.sendKnowledge
-  }
-
-  const getModeName = (m) => {
-    if (m === 'biz') return 'Ortus · Business'
-    if (m === 'brand') return 'Ortus · Brand'
-    if (m === 'builder') return 'Ortus · Builder'
-    return 'Ortus · Knowledge'
-  }
-
-  const getModeIcon = (m) => {
-    if (m === 'biz') return '📊'
-    if (m === 'brand') return '✦'
-    if (m === 'builder') return '🏗️'
-    return '🌍'
+  const getStyle = (prefix, m) => {
+    const map = { biz: 'Biz', brand: 'Brand', builder: 'Builder', knowledge: 'Knowledge' }
+    return c(prefix + (map[m] || 'Biz'))
   }
 
   const extractCode = (text) => {
     const patterns = [
-      /```html\n?([\s\S]*?)```/,
-      /```\n?([\s\S]*?)```/,
-      /(<!DOCTYPE html>[\s\S]*)/i,
-      /(<html[\s\S]*<\/html>)/i
+      /```html\n?([\s\S]*?)```/i,
+      /```\n?(<!DOCTYPE[\s\S]*?)```/i,
+      /(<!DOCTYPE html>[\s\S]*?<\/html>)/i,
+      /```\n?([\s\S]*?<\/html>[\s\S]*?)```/i
     ]
     for (const pattern of patterns) {
       const match = text.match(pattern)
       if (match) {
         const code = match[1] || match[0]
-        if (code && code.includes('<')) return code
+        if (code && (code.includes('<html') || code.includes('<!DOCTYPE'))) return code.trim()
       }
     }
     return null
@@ -126,32 +72,27 @@ export default function AppPage() {
   const switchMode = (m) => {
     setMode(m)
     resetConversation()
-    if (m === 'biz') setActiveCat('Business Plan')
-    else if (m === 'brand') setActiveCat('Brand Identity')
-    else if (m === 'builder') setActiveCat('Landing Page')
-    else setActiveCat('Universe & Space')
-    const names = {
-      biz: 'Switched to Business Mode — analytical, strategic, structured.',
-      brand: 'Switched to Brand Mode — creative, visual, expressive.',
-      builder: 'Switched to Builder Mode — building complete websites and apps.',
-      knowledge: 'Switched to Knowledge Mode — deep research on any topic.'
+    const cats = { biz: 'Business Plan', brand: 'Brand Identity', builder: 'Landing Page', knowledge: 'Universe & Space' }
+    setActiveCat(cats[m])
+    const msgs = {
+      biz: '📊 Business Mode activated. Analytical, strategic, structured. I will build you world-class business frameworks, investor pitches and growth strategies.',
+      brand: '✦ Brand Mode activated. Creative, visual, expressive. I will craft distinctive brand identities, campaigns and creative strategies.',
+      builder: '🏗️ Builder Mode activated. I will generate complete, stunning, deployable websites and apps. Describe what you want built.',
+      knowledge: '🌍 Knowledge Mode activated. Deep research on any topic. Ask me anything — from the origin of the universe to the future of AI.'
     }
-    addMessage('ai', names[m])
+    addMessage('ai', msgs[m])
   }
 
   const handleCatChange = (cat) => {
     setActiveCat(cat)
     resetConversation()
+    addMessage('ai', `${MODE_CONFIG[mode].icon} Ready to work on ${cat}. Tell me what you need.`)
   }
 
   const addMessage = (who, text, isPrompt, cat, output) => {
     setMessages(prev => [...prev, {
-      who,
-      text: text || '',
-      isPrompt: isPrompt || false,
-      cat: cat || '',
-      output: output || '',
-      id: Date.now() + Math.random()
+      who, text: text || '', isPrompt: isPrompt || false,
+      cat: cat || '', output: output || '', id: Date.now() + Math.random()
     }])
   }
 
@@ -165,21 +106,18 @@ export default function AppPage() {
     setLoading(true)
 
     try {
-      const loadingMessages = {
-        biz: 'Analysing and building your framework...',
-        brand: 'Crafting your brand strategy...',
-        builder: 'Building your website...',
-        knowledge: 'Researching deeply across all knowledge...'
+      const loadingMsgs = {
+        biz: '📊 Analysing and constructing your framework...',
+        brand: '✦ Crafting your brand strategy...',
+        builder: '🏗️ Building your website — this may take a moment...',
+        knowledge: '🌍 Researching deeply across all fields of knowledge...'
       }
-      addMessage('ai', loadingMessages[mode])
+      addMessage('ai', loadingMsgs[mode])
       const result = await generatePrompt(msg, mode, activeCat)
 
       setMessages(prev => {
         const copy = [...prev]
-        copy[copy.length - 1] = {
-          ...copy[copy.length - 1],
-          text: 'Here is your ' + activeCat + ':'
-        }
+        copy[copy.length - 1] = { ...copy[copy.length - 1], text: `${MODE_CONFIG[mode].icon} Here is your ${activeCat}:` }
         return copy
       })
 
@@ -195,14 +133,39 @@ export default function AppPage() {
 
       if (!isPro && trialLeft - 1 <= 0) {
         setTimeout(() => {
-          addMessage('ai', 'You have used all your free prompts. Upgrade to Ortus Pro for unlimited access.')
+          addMessage('ai', 'You have used all your free prompts. Upgrade to Ortus Pro for unlimited access to all modes.')
           setShowPaywall(true)
         }, 1000)
       }
     } catch (err) {
-      addMessage('ai', 'Error: ' + err.message)
+      addMessage('ai', '⚠️ Error: ' + err.message + '. Please try again.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleDeploy = async (code) => {
+    setDeploying(true)
+    try {
+      const response = await fetch('/api/deploy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          htmlCode: code,
+          siteName: 'ortus-' + Date.now()
+        })
+      })
+      const data = await response.json()
+      if (data.url) {
+        setPreviewUrl(data.url)
+        addMessage('ai', `🚀 Your website is LIVE at: ${data.url} — Click the link to see it!`)
+      } else {
+        throw new Error(data.error || 'Deploy failed')
+      }
+    } catch (err) {
+      addMessage('ai', '⚠️ Deploy failed: ' + err.message + '. You can still copy the code and deploy manually on netlify.com')
+    } finally {
+      setDeploying(false)
     }
   }
 
@@ -230,20 +193,23 @@ export default function AppPage() {
       <div className={styles.topbar}>
         <div className={styles.logo}>ORT<span>US</span></div>
         <div className={styles.modeToggle}>
-          <button className={styles.modeBtn + ' ' + styles.modeBiz + (mode === 'biz' ? ' ' + styles.modeActive : '')} onClick={() => switchMode('biz')}>Business</button>
-          <button className={styles.modeBtn + ' ' + styles.modeBrand + (mode === 'brand' ? ' ' + styles.modeActive : '')} onClick={() => switchMode('brand')}>Brand</button>
-          <button className={styles.modeBtn + ' ' + styles.modeBuilder + (mode === 'builder' ? ' ' + styles.modeActive : '')} onClick={() => switchMode('builder')}>Builder</button>
-          <button className={styles.modeBtn + ' ' + styles.modeKnowledge + (mode === 'knowledge' ? ' ' + styles.modeActive : '')} onClick={() => switchMode('knowledge')}>Knowledge</button>
+          {Object.entries(MODE_CONFIG).map(([m, cfg]) => (
+            <button
+              key={m}
+              className={styles.modeBtn + ' ' + getStyle('mode', m) + (mode === m ? ' ' + styles.modeActive : '')}
+              onClick={() => switchMode(m)}
+            >{cfg.label}</button>
+          ))}
         </div>
         <div className={styles.topRight}>
-          <button className={styles.iconBtn} onClick={loadHistory}>⊙</button>
-          <button className={styles.iconBtn} onClick={handleSignOut}>↩</button>
+          <button className={styles.iconBtn} onClick={loadHistory} title="History">⊙</button>
+          <button className={styles.iconBtn} onClick={handleSignOut} title="Sign out">↩</button>
         </div>
       </div>
 
       {!isPro && (
         <div className={styles.trialBar}>
-          <span>{freeLeft > 0 ? '✦ ' + freeLeft + ' free prompt' + (freeLeft !== 1 ? 's' : '') + ' remaining' : '✦ Free trial ended'}</span>
+          <span>{freeLeft > 0 ? `✦ ${freeLeft} free prompt${freeLeft !== 1 ? 's' : ''} remaining` : '✦ Free trial ended'}</span>
           <button onClick={() => setShowPaywall(true)}>UPGRADE TO PRO</button>
         </div>
       )}
@@ -257,7 +223,7 @@ export default function AppPage() {
         {cats.map(cat => (
           <button
             key={cat}
-            className={styles.cat + (activeCat === cat ? ' ' + getActiveStyle(mode) : '')}
+            className={styles.cat + (activeCat === cat ? ' ' + getStyle('catActive', mode) : '')}
             onClick={() => handleCatChange(cat)}
           >{cat}</button>
         ))}
@@ -266,29 +232,47 @@ export default function AppPage() {
       <div className={styles.chat} ref={chatRef}>
         {messages.map(msg => (
           <div key={msg.id} className={styles.msg + (msg.who === 'user' ? ' ' + styles.userMsg : '')}>
-            <div className={styles.avatar + ' ' + (msg.who === 'user' ? styles.avatarUser : getAvatarStyle(mode))}>
-              {msg.who === 'user' ? 'U' : 'O'}
+            <div className={styles.avatar + ' ' + (msg.who === 'user' ? styles.avatarUser : getStyle('avatar', mode))}>
+              {msg.who === 'user' ? (user?.user_metadata?.full_name?.[0] ?? 'U') : 'O'}
             </div>
             <div className={styles.msgBody}>
-              <div className={styles.msgName + (msg.who !== 'user' ? ' ' + getNameStyle(mode) : '')}>
-                {msg.who === 'user' ? 'You' : getModeName(mode)}
+              <div className={styles.msgName + (msg.who !== 'user' ? ' ' + getStyle('name', mode) : '')}>
+                {msg.who === 'user' ? 'You' : `Ortus · ${MODE_CONFIG[mode]?.label}`}
               </div>
               {msg.isPrompt ? (
-                <div className={styles.outputCard + ' ' + getOutputStyle(mode)}>
-                  <div className={styles.outputLabel + ' ' + getLabelStyle(mode)}>
-                    {getModeIcon(mode)} {msg.cat}
+                <div className={styles.outputCard + ' ' + getStyle('output', mode)}>
+                  <div className={styles.outputLabel + ' ' + getStyle('label', mode)}>
+                    {MODE_CONFIG[mode]?.icon} {msg.cat}
                   </div>
                   <div className={styles.outputText}>{msg.output}</div>
                   <div className={styles.outputActions}>
-                    <span className={styles.outputType}>{getModeName(mode)}</span>
+                    <span className={styles.outputType}>Ortus · {MODE_CONFIG[mode]?.label}</span>
                     <div className={styles.actionBtns}>
-                      <button className={styles.actBtn + ' ' + getActStyle(mode)} onClick={() => copyToClipboard(msg.output)}>Copy</button>
+                      <button className={styles.actBtn + ' ' + getStyle('act', mode)} onClick={() => copyToClipboard(msg.output)}>Copy</button>
                       {mode === 'builder' && extractCode(msg.output) && (
-                        <button className={styles.actBtn + ' ' + styles.actBuilder} onClick={() => { setPreviewCode(extractCode(msg.output)); setShowPreview(true) }}>Preview</button>
+                        <>
+                          <button
+                            className={styles.actBtn + ' ' + styles.actBuilder}
+                            onClick={() => { setPreviewCode(extractCode(msg.output)); setShowPreview(true) }}
+                          >Preview</button>
+                          <button
+                            className={styles.actBtn + ' ' + styles.actBuilder}
+                            onClick={() => handleDeploy(extractCode(msg.output))}
+                            disabled={deploying}
+                          >{deploying ? 'Deploying...' : '🚀 Deploy'}</button>
+                        </>
                       )}
-                      <button className={styles.actBtn + ' ' + getActStyle(mode)} onClick={() => setInput('Refine this further with more depth and detail')}>Refine</button>
+                      <button
+                        className={styles.actBtn + ' ' + getStyle('act', mode)}
+                        onClick={() => setInput('Refine this further — make it more detailed, more powerful and more complete')}
+                      >Refine</button>
                     </div>
                   </div>
+                  {previewUrl && mode === 'builder' && (
+                    <div className={styles.liveUrl}>
+                      🌐 Live: <a href={previewUrl} target="_blank" rel="noreferrer">{previewUrl}</a>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className={styles.bubble}>{msg.text}</div>
@@ -298,9 +282,9 @@ export default function AppPage() {
         ))}
         {loading && (
           <div className={styles.msg}>
-            <div className={styles.avatar + ' ' + getAvatarStyle(mode)}>O</div>
+            <div className={styles.avatar + ' ' + getStyle('avatar', mode)}>O</div>
             <div className={styles.msgBody}>
-              <div className={styles.typing + ' ' + getTypingStyle(mode)}>
+              <div className={styles.typing + ' ' + getStyle('typing', mode)}>
                 <span></span><span></span><span></span>
               </div>
             </div>
@@ -311,20 +295,15 @@ export default function AppPage() {
       <div className={styles.inputArea}>
         <div className={styles.inputRow}>
           <textarea
-            className={styles.inputBox + ' ' + (mode === 'biz' ? styles.inputBiz : mode === 'brand' ? styles.inputBrand : mode === 'builder' ? styles.inputBuilder : styles.inputKnowledge)}
+            className={styles.inputBox + ' ' + getStyle('input', mode)}
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() } }}
-            placeholder={
-              mode === 'biz' ? 'e.g. Build me an investor pitch for a fragrance brand...' :
-              mode === 'brand' ? 'e.g. Create a brand identity for a luxury streetwear label...' :
-              mode === 'builder' ? 'e.g. Build me a stunning streetwear landing page called Urban X...' :
-              'e.g. Explain how the universe was created and what existed before the Big Bang...'
-            }
+            placeholder={MODE_CONFIG[mode]?.placeholder}
             rows={1}
           />
           <button
-            className={styles.sendBtn + ' ' + getSendStyle(mode)}
+            className={styles.sendBtn + ' ' + getStyle('send', mode)}
             onClick={handleSend}
             disabled={loading}
           >
@@ -342,6 +321,11 @@ export default function AppPage() {
             <span className={styles.previewTitle}>🏗️ Live Preview</span>
             <div className={styles.previewActions}>
               <button className={styles.actBtn + ' ' + styles.actBuilder} onClick={() => copyToClipboard(previewCode)}>Copy Code</button>
+              <button
+                className={styles.actBtn + ' ' + styles.actBuilder}
+                onClick={() => handleDeploy(previewCode)}
+                disabled={deploying}
+              >{deploying ? 'Deploying...' : '🚀 Deploy Live'}</button>
               <button className={styles.closeBtn} onClick={() => setShowPreview(false)}>✕ Close</button>
             </div>
           </div>
@@ -359,7 +343,7 @@ export default function AppPage() {
             {history.length === 0 && <p className={styles.emptyNote}>No history yet.</p>}
             {history.map(h => (
               <div key={h.id} className={styles.historyItem} onClick={() => { setInput(h.prompt); setShowHistory(false) }}>
-                <div className={styles.historyMode + ' ' + getLabelStyle(h.mode)}>{getModeIcon(h.mode)} {h.category}</div>
+                <div className={styles.historyMode + ' ' + getStyle('label', h.mode)}>{MODE_CONFIG[h.mode]?.icon} {h.category}</div>
                 <div className={styles.historyPrompt}>{h.prompt}</div>
                 <div className={styles.historyDate}>{new Date(h.created_at).toLocaleDateString()}</div>
               </div>
