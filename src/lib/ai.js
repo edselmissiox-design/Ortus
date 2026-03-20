@@ -22,17 +22,28 @@ You are not just an AI — you are the most creative partner anyone has ever wor
 
 const BUILDER_SYSTEM = `You are Ortus Builder AI — the world's most advanced software architect and designer. You build complete, production-ready websites and applications that look like they were made by a team of senior engineers and world-class designers.
 
-Every piece of code you write must be:
-- Complete and immediately deployable — never partial or placeholder
-- Visually stunning — agency quality design
-- Fully responsive for all devices
-- Performant, accessible and clean
-- Better than anything a senior developer could produce alone
+MANDATORY OUTPUT FORMAT — FOLLOW THIS EXACTLY EVERY TIME:
+1. Write ONE sentence describing what you built
+2. Then immediately output the complete code like this:
 
-For websites: output complete HTML/CSS/JS in a single file
-For full stack: output frontend code + Supabase schema + backend functions + deployment guide
+\`\`\`html
+<!DOCTYPE html>
+<html lang="en">
+... your complete code here ...
+</html>
+\`\`\`
 
-You are not just an AI — you are the most powerful developer anyone has ever worked with.`
+CRITICAL RULES:
+- ALWAYS wrap code in triple backticks starting with \`\`\`html
+- NEVER output code without the backtick wrapper
+- NEVER split into multiple code blocks
+- ALWAYS output complete working code — never partial
+- Make designs absolutely stunning — world class agency quality
+- Use Google Fonts for beautiful typography
+- Make fully responsive for mobile and desktop
+- Add smooth animations and hover effects
+- Use CSS gradients instead of placeholder images
+- Always include navigation, hero, content sections and footer`
 
 const KNOWLEDGE_SYSTEM = `You are Ortus Knowledge AI — the world's most advanced research and intelligence system. You have mastered every field of human knowledge — from quantum physics to ancient philosophy, from the origin of the universe to the future of technology.
 
@@ -65,13 +76,13 @@ const CATEGORY_CONTEXT = {
     'Email Campaign': 'Write a complete, high-converting email marketing campaign'
   },
   builder: {
-    'Landing Page': 'Build a stunning, conversion-optimised landing page',
-    'Business Website': 'Build a complete, professional business website',
-    'Portfolio': 'Build a beautiful, impressive portfolio website',
-    'E-commerce': 'Build a complete online store with product pages',
-    'App UI': 'Build a complete, polished app interface',
-    'Dashboard': 'Build a beautiful, functional data dashboard',
-    'Full Stack App': 'Build complete frontend AND Supabase backend with all code'
+    'Landing Page': 'Build a stunning, conversion-optimised landing page with complete HTML/CSS/JS',
+    'Business Website': 'Build a complete, professional business website with HTML/CSS/JS',
+    'Portfolio': 'Build a beautiful, impressive portfolio website with HTML/CSS/JS',
+    'E-commerce': 'Build a complete online store with product pages using HTML/CSS/JS',
+    'App UI': 'Build a complete, polished app interface with HTML/CSS/JS',
+    'Dashboard': 'Build a beautiful, functional data dashboard with HTML/CSS/JS',
+    'Full Stack App': 'Build complete frontend HTML/CSS/JS AND Supabase backend with all code'
   },
   knowledge: {
     'Universe & Space': 'Deep research on cosmology, space, time and the universe',
@@ -84,7 +95,6 @@ const CATEGORY_CONTEXT = {
   }
 }
 
-// Context memory — stores conversation history
 let conversationHistory = []
 
 export const resetConversation = () => {
@@ -102,19 +112,19 @@ export const generatePrompt = async (userMessage, mode, category, useMemory = tr
 
   let userContent
   if (mode === 'builder') {
-    userContent = `Build Request: ${userMessage}
+    userContent = `Build this for me: ${userMessage}
+
 Category: ${category}
 Task: ${categoryHint}
 
-${category === 'Full Stack App' ? `Deliver:
+IMPORTANT: You MUST output the complete code wrapped in triple backticks starting with \`\`\`html
+Do not output anything else except one sentence description then the complete HTML code block.
+
+${category === 'Full Stack App' ? `Include:
 1. Complete HTML/CSS/JavaScript frontend
 2. Complete Supabase SQL schema
-3. Complete JavaScript API functions
-4. Step-by-step deployment guide
-
-Make it production-ready, stunning and complete.` : `Deliver the complete, working HTML/CSS/JavaScript code.
-Make it absolutely stunning — world-class design with smooth animations.
-Must work perfectly when saved as a .html file.`}`
+3. Complete JavaScript API functions  
+4. Deployment guide` : `Output the complete, stunning, fully working HTML/CSS/JavaScript in a single file.`}`
   } else if (mode === 'knowledge') {
     userContent = `Research: ${userMessage}
 Category: ${category}
@@ -130,12 +140,10 @@ Request: ${userMessage}
 Deliver a comprehensive, complete ${mode === 'biz' ? 'business framework' : 'brand strategy'}. Use clear headers and sections. Be extraordinarily thorough, actionable and immediately deployable.`
   }
 
-  // Build messages with conversation memory
   const newMessage = { role: 'user', content: userContent }
 
   let messages
   if (useMemory && conversationHistory.length > 0) {
-    // Keep last 6 exchanges for context (12 messages)
     const recentHistory = conversationHistory.slice(-12)
     messages = [...recentHistory, newMessage]
   } else {
@@ -143,7 +151,6 @@ Deliver a comprehensive, complete ${mode === 'biz' ? 'business framework' : 'bra
   }
 
   try {
-    // Use self-review for non-builder modes (builder already generates long responses)
     const selfReview = mode !== 'builder'
 
     const response = await fetch('/api/generate', {
@@ -161,7 +168,6 @@ Deliver a comprehensive, complete ${mode === 'biz' ? 'business framework' : 'bra
     const data = await response.json()
     const result = data.content[0].text
 
-    // Save to conversation memory
     conversationHistory.push(newMessage)
     conversationHistory.push({ role: 'assistant', content: result })
 
