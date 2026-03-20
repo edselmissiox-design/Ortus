@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 import styles from './Paywall.module.css'
 
@@ -9,24 +8,27 @@ const PLANS = [
     name: 'Starter',
     price: '£9',
     period: '/mo',
-    features: ['50 prompts/month', 'Business OR Brand mode', 'Prompt history', 'Email support'],
+    priceId: process.env.REACT_APP_STRIPE_STARTER_PRICE,
+    features: ['50 prompts/month', 'All 4 AI modes', 'Prompt history', 'Email support'],
     highlight: false
   },
   {
     id: 'pro',
     name: 'Pro',
-    price: '£19',
+    price: '£21',
     period: '/mo',
-    features: ['Unlimited prompts', 'Business + Brand modes', 'Full prompt history', 'Priority AI', 'PDF export'],
+    priceId: process.env.REACT_APP_STRIPE_PRO_PRICE,
+    features: ['Unlimited prompts', 'All 4 AI modes', 'Priority AI', 'Full history', 'Advanced features'],
     highlight: true,
     badge: 'Most Popular'
   },
   {
     id: 'team',
     name: 'Team',
-    price: '£49',
+    price: '£56',
     period: '/mo',
-    features: ['5 team seats', 'Unlimited prompts', 'Both modes', 'Shared prompt library', 'Priority support'],
+    priceId: process.env.REACT_APP_STRIPE_TEAM_PRICE,
+    features: ['5 team seats', 'Unlimited prompts', 'All 4 AI modes', 'Shared library', 'Priority support'],
     highlight: false
   }
 ]
@@ -44,22 +46,25 @@ export default function Paywall({ onClose, onSuccess }) {
     setError('')
 
     try {
-      const { error: dbError } = await supabase
-        .from('user_plans')
-        .upsert({
-          user_id: user.id,
-          plan: selected,
-          prompts_used: 0,
-          prompts_limit: selected === 'starter' ? 50 : 99999,
-          updated_at: new Date()
+      const response = await fetch('/api/stripe-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          priceId: plan.priceId,
+          email: user.email,
+          userId: user.id
         })
+      })
 
-      if (dbError) throw dbError
-      onSuccess?.()
-      onClose()
+      const data = await response.json()
+
+      if (data.error) throw new Error(data.error)
+
+      // Redirect to Stripe checkout
+      window.location.href = data.url
+
     } catch (err) {
       setError(err.message)
-    } finally {
       setLoading(false)
     }
   }
@@ -72,7 +77,7 @@ export default function Paywall({ onClose, onSuccess }) {
         <div className={styles.header}>
           <div className={styles.icon}>✦</div>
           <h2 className={styles.title}>Unlock <span>Ortus</span></h2>
-          <p className={styles.sub}>Your free trial has ended. Choose a plan to keep building powerful business and brand prompts.</p>
+          <p className={styles.sub}>Your free trial has ended. Choose a plan to keep building powerful AI prompts, websites and more.</p>
         </div>
 
         <div className={styles.plans}>
@@ -101,10 +106,10 @@ export default function Paywall({ onClose, onSuccess }) {
           onClick={handleSubscribe}
           disabled={loading}
         >
-          {loading ? 'Processing...' : `Start ${PLANS.find(p => p.id === selected)?.name} — ${PLANS.find(p => p.id === selected)?.price}/mo`}
+          {loading ? 'Redirecting to checkout...' : `Start ${PLANS.find(p => p.id === selected)?.name} — ${PLANS.find(p => p.id === selected)?.price}/mo`}
         </button>
 
-        <p className={styles.note}>Cancel anytime · Secure payment via Stripe</p>
+        <p className={styles.note}>Cancel anytime · Secure payment via Stripe · 🔒</p>
       </div>
     </div>
   )
