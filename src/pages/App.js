@@ -106,6 +106,23 @@ export default function AppPage() {
     return '🌍'
   }
 
+  const extractCode = (text) => {
+    const patterns = [
+      /```html\n?([\s\S]*?)```/,
+      /```\n?([\s\S]*?)```/,
+      /(<!DOCTYPE html>[\s\S]*)/i,
+      /(<html[\s\S]*<\/html>)/i
+    ]
+    for (const pattern of patterns) {
+      const match = text.match(pattern)
+      if (match) {
+        const code = match[1] || match[0]
+        if (code && code.includes('<')) return code
+      }
+    }
+    return null
+  }
+
   const switchMode = (m) => {
     setMode(m)
     resetConversation()
@@ -117,7 +134,7 @@ export default function AppPage() {
       biz: 'Switched to Business Mode — analytical, strategic, structured.',
       brand: 'Switched to Brand Mode — creative, visual, expressive.',
       builder: 'Switched to Builder Mode — building complete websites and apps.',
-      knowledge: 'Switched to Knowledge Mode — deep research on any topic. Select a category above and ask me anything.'
+      knowledge: 'Switched to Knowledge Mode — deep research on any topic.'
     }
     addMessage('ai', names[m])
   }
@@ -136,11 +153,6 @@ export default function AppPage() {
       output: output || '',
       id: Date.now() + Math.random()
     }])
-  }
-
-  const extractCode = (text) => {
-    const match = text.match(/```(?:html)?\n?([\s\S]*?)```/)
-    return match ? match[1] : null
   }
 
   const handleSend = async () => {
@@ -306,7 +318,7 @@ export default function AppPage() {
             placeholder={
               mode === 'biz' ? 'e.g. Build me an investor pitch for a fragrance brand...' :
               mode === 'brand' ? 'e.g. Create a brand identity for a luxury streetwear label...' :
-              mode === 'builder' ? 'e.g. Build me a full stack e-commerce app for fragrances...' :
+              mode === 'builder' ? 'e.g. Build me a stunning streetwear landing page called Urban X...' :
               'e.g. Explain how the universe was created and what existed before the Big Bang...'
             }
             rows={1}
