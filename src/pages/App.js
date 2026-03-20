@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/AuthContext'
-import { generatePrompt } from '../lib/ai'
+import { generatePrompt, resetConversation } from '../lib/ai'
 import { savePrompt, getPromptHistory, signOut, updatePromptsUsed } from '../lib/supabase'
 import Paywall from '../components/Paywall'
 import styles from './App.module.css'
@@ -29,19 +29,12 @@ export default function AppPage() {
 
   useEffect(() => {
     if (!user) { navigate('/login'); return }
-    addMessage('ai', 'Welcome to Ortus. Four powerful modes: Business, Brand, Builder and Knowledge. Select a mode and tell me what you need.')
+    addMessage('ai', 'Welcome to Ortus. Four powerful AI modes: Business, Brand, Builder and Knowledge. Select a mode and category, then tell me what you need.')
   }, [user])
 
   useEffect(() => {
     if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight
   }, [messages])
-
-  const getModeColor = (m) => {
-    if (m === 'biz') return styles.modeBiz
-    if (m === 'brand') return styles.modeBrand
-    if (m === 'builder') return styles.modeBuilder
-    return styles.modeKnowledge
-  }
 
   const getActiveStyle = (m) => {
     if (m === 'biz') return styles.catActiveBiz
@@ -115,17 +108,23 @@ export default function AppPage() {
 
   const switchMode = (m) => {
     setMode(m)
+    resetConversation()
     if (m === 'biz') setActiveCat('Business Plan')
     else if (m === 'brand') setActiveCat('Brand Identity')
     else if (m === 'builder') setActiveCat('Landing Page')
     else setActiveCat('Universe & Space')
     const names = {
-      biz: 'Business Mode — analytical, strategic, structured.',
-      brand: 'Brand Mode — creative, visual, expressive.',
-      builder: 'Builder Mode — I will generate complete websites and full stack apps.',
-      knowledge: 'Knowledge Mode — deep research on any topic in the universe.'
+      biz: 'Switched to Business Mode — analytical, strategic, structured.',
+      brand: 'Switched to Brand Mode — creative, visual, expressive.',
+      builder: 'Switched to Builder Mode — building complete websites and apps.',
+      knowledge: 'Switched to Knowledge Mode — deep research on any topic. Select a category above and ask me anything.'
     }
-    addMessage('ai', 'Switched to ' + names[m])
+    addMessage('ai', names[m])
+  }
+
+  const handleCatChange = (cat) => {
+    setActiveCat(cat)
+    resetConversation()
   }
 
   const addMessage = (who, text, isPrompt, cat, output) => {
@@ -155,10 +154,10 @@ export default function AppPage() {
 
     try {
       const loadingMessages = {
-        biz: 'Building your business framework...',
+        biz: 'Analysing and building your framework...',
         brand: 'Crafting your brand strategy...',
         builder: 'Building your website...',
-        knowledge: 'Researching deeply...'
+        knowledge: 'Researching deeply across all knowledge...'
       }
       addMessage('ai', loadingMessages[mode])
       const result = await generatePrompt(msg, mode, activeCat)
@@ -247,7 +246,7 @@ export default function AppPage() {
           <button
             key={cat}
             className={styles.cat + (activeCat === cat ? ' ' + getActiveStyle(mode) : '')}
-            onClick={() => setActiveCat(cat)}
+            onClick={() => handleCatChange(cat)}
           >{cat}</button>
         ))}
       </div>
@@ -275,7 +274,7 @@ export default function AppPage() {
                       {mode === 'builder' && extractCode(msg.output) && (
                         <button className={styles.actBtn + ' ' + styles.actBuilder} onClick={() => { setPreviewCode(extractCode(msg.output)); setShowPreview(true) }}>Preview</button>
                       )}
-                      <button className={styles.actBtn + ' ' + getActStyle(mode)} onClick={() => setInput('Refine this with more detail and depth')}>Refine</button>
+                      <button className={styles.actBtn + ' ' + getActStyle(mode)} onClick={() => setInput('Refine this further with more depth and detail')}>Refine</button>
                     </div>
                   </div>
                 </div>
@@ -308,7 +307,7 @@ export default function AppPage() {
               mode === 'biz' ? 'e.g. Build me an investor pitch for a fragrance brand...' :
               mode === 'brand' ? 'e.g. Create a brand identity for a luxury streetwear label...' :
               mode === 'builder' ? 'e.g. Build me a full stack e-commerce app for fragrances...' :
-              'e.g. Explain how the universe was created and what came before the Big Bang...'
+              'e.g. Explain how the universe was created and what existed before the Big Bang...'
             }
             rows={1}
           />
