@@ -329,7 +329,13 @@ export default function AppPage() {
               <button className={styles.closeBtn} onClick={() => setShowPreview(false)}>✕ Close</button>
             </div>
           </div>
-          <iframe srcDoc={previewCode} className={styles.previewFrame} title="Preview" sandbox="allow-scripts" />
+          <iframe
+  srcDoc={previewCode}
+  className={styles.previewFrame}
+  title="Preview"
+  sandbox="allow-scripts allow-same-origin allow-forms"
+  style={{ flex: 1, border: 'none', width: '100%', minHeight: '500px', background: 'white', display: 'block' }}
+/>
         </div>
       )}
 
