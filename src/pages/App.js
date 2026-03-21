@@ -332,10 +332,9 @@ export default function AppPage() {
             </div>
           </div>
           <iframe
-            srcDoc={previewCode}
+            src={previewCode ? URL.createObjectURL(new Blob([previewCode], {type: 'text/html'})) : ''}
             className={styles.previewFrame}
             title="Preview"
-            sandbox="allow-scripts allow-same-origin"
           />
         </div>
       )}
