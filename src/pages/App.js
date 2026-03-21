@@ -145,6 +145,25 @@ export default function AppPage() {
   }
 
   const handleDeploy = (code) => {
+  if (!code) {
+    addMessage('ai', '⚠️ No code found to deploy. Try generating the website again and make sure to use Builder mode.')
+    return
+  }
+  try {
+    const blob = new Blob([code], { type: 'text/html' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'ortus-website.html'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+    addMessage('ai', '✅ Website downloaded! Now go to netlify.com/drop and drag the file — your site will be live in 30 seconds! 🚀')
+  } catch (err) {
+    addMessage('ai', '⚠️ Download failed: ' + err.message)
+  }
+}
   const blob = new Blob([code], { type: 'text/html' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
