@@ -144,7 +144,18 @@ export default function AppPage() {
     }
   }
 
-  const handleDeploy = async (code) => {
+  const handleDeploy = (code) => {
+  const blob = new Blob([code], { type: 'text/html' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'ortus-build.html'
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+  addMessage('ai', '✅ Your website has been downloaded! Now go to netlify.com/drop, drag and drop the file — your site will be live in 30 seconds!')
+}
     setDeploying(true)
     try {
       const response = await fetch('/api/deploy', {
