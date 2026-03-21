@@ -249,7 +249,7 @@ export default function AppPage() {
                     <span className={styles.outputType}>Ortus · {MODE_CONFIG[mode]?.label}</span>
                     <div className={styles.actionBtns}>
                       <button className={styles.actBtn + ' ' + getStyle('act', mode)} onClick={() => copyToClipboard(msg.output)}>Copy</button>
-                      {mode === 'builder' && extractCode(msg.output) && (
+                      {mode === 'builder' && (
                         <>
                           <button
                             className={styles.actBtn + ' ' + styles.actBuilder}
