@@ -4,12 +4,26 @@ import styles from './Landing.module.css'
 
 function OrtusLogoMark({ size = 60 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-      <path d="M50 88 L50 58 L32 88 Z" fill="rgba(201,168,76,0.25)" stroke="#c9a84c" strokeWidth="1.5" strokeLinejoin="round"/>
-      <path d="M50 88 L50 32 L68 88 Z" fill="rgba(201,168,76,0.6)" stroke="#c9a84c" strokeWidth="1.5" strokeLinejoin="round"/>
-      <path d="M50 88 L68 58 L86 88 Z" fill="rgba(201,168,76,0.25)" stroke="#c9a84c" strokeWidth="1.5" strokeLinejoin="round"/>
-      <line x1="24" y1="94" x2="76" y2="94" stroke="#c9a84c" strokeWidth="2.5" strokeLinecap="round"/>
-      <circle cx="50" cy="22" r="7" fill="#c9a84c"/>
+    <svg width={size} height={size} viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style={{ overflow: 'visible' }}>
+      <style>{`
+        @keyframes pulse1 { 0%, 100% { opacity: 0.15; r: 38; } 50% { opacity: 0.05; r: 48; } }
+        @keyframes pulse2 { 0%, 100% { opacity: 0.1; r: 52; } 50% { opacity: 0.03; r: 64; } }
+        @keyframes pulse3 { 0%, 100% { opacity: 0.06; r: 66; } 50% { opacity: 0.02; r: 80; } }
+        @keyframes glowDot { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+        @keyframes riseUp { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+        .ortus-mark { animation: riseUp 3s ease-in-out infinite; transform-origin: center; }
+      `}</style>
+      <!-- Expanding rings -->
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#c9a84c" strokeWidth="0.5" style={{ animation: 'pulse1 2.5s ease-in-out infinite' }}/>
+      <circle cx="50" cy="50" r="52" fill="none" stroke="#c9a84c" strokeWidth="0.4" style={{ animation: 'pulse2 2.5s ease-in-out infinite 0.4s' }}/>
+      <circle cx="50" cy="50" r="66" fill="none" stroke="#c9a84c" strokeWidth="0.3" style={{ animation: 'pulse3 2.5s ease-in-out infinite 0.8s' }}/>
+      <g className="ortus-mark">
+        <path d="M50 88 L50 58 L32 88 Z" fill="rgba(201,168,76,0.25)" stroke="#c9a84c" strokeWidth="1.5" strokeLinejoin="round"/>
+        <path d="M50 88 L50 32 L68 88 Z" fill="rgba(201,168,76,0.6)" stroke="#c9a84c" strokeWidth="1.5" strokeLinejoin="round"/>
+        <path d="M50 88 L68 58 L86 88 Z" fill="rgba(201,168,76,0.25)" stroke="#c9a84c" strokeWidth="1.5" strokeLinejoin="round"/>
+        <line x1="24" y1="94" x2="76" y2="94" stroke="#c9a84c" strokeWidth="2.5" strokeLinecap="round"/>
+        <circle cx="50" cy="22" r="8" fill="#c9a84c" style={{ animation: 'glowDot 2.5s ease-in-out infinite' }}/>
+      </g>
     </svg>
   )
 }
@@ -128,7 +142,7 @@ export default function Landing() {
         <p className={styles.trialNote}>3 free prompts · No credit card required</p>
 
         <div className={styles.footer}>
-          <OrtusLogoMark size={28} />
+         <OrtusLogoMark size={100} />
           <span>© 2026 Ortus AI Platform</span>
         </div>
 
