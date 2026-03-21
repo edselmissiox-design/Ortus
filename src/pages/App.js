@@ -7,7 +7,7 @@ import Paywall from '../components/Paywall'
 import styles from './App.module.css'
 
 const BIZ_CATS = ['Business Plan', 'Financial Model', 'Marketing Campaign', 'Investor Pitch', 'SOP & Process', 'Market Research', 'Growth Strategy']
-const BRAND_CATS = ['Brand Identity', 'Social Content', 'Ad Copy', 'Brand Voice', 'Visual Direction', 'Launch Strategy', 'Email Campaign']
+const BRAND_CATS = ['Brand Identity', 'Logo Design', 'Social Content', 'Ad Copy', 'Brand Voice', 'Visual Direction', 'Launch Strategy', 'Email Campaign']
 const BUILDER_CATS = ['Landing Page', 'Business Website', 'Portfolio', 'E-commerce', 'App UI', 'Dashboard', 'Full Stack App']
 const KNOWLEDGE_CATS = ['Universe & Space', 'Science & Physics', 'History & Philosophy', 'Technology & AI', 'Business & Economy', 'Mathematics', 'Health & Biology']
 
@@ -31,25 +31,22 @@ export default function AppPage() {
   const [showPreview, setShowPreview] = useState(false)
   const [previewCode, setPreviewCode] = useState('')
   const [previewUrl, setPreviewUrl] = useState('')
-  const [deploying, setDeploying] = useState(false)
   const [history, setHistory] = useState([])
   const [promptsUsed, setPromptsUsed] = useState(0)
   const chatRef = useRef(null)
 
   useEffect(() => {
     if (!user) { navigate('/login'); return }
-    addMessage('ai', `Welcome to Ortus${user?.user_metadata?.full_name ? ', ' + user.user_metadata.full_name.split(' ')[0] : ''}. I am your super intelligent AI platform. Four powerful modes: Business, Brand, Builder and Knowledge. What would you like to create today?`)
+    addMessage('ai', 'Welcome to Ortus' + (user.user_metadata && user.user_metadata.full_name ? ', ' + user.user_metadata.full_name.split(' ')[0] : '') + '. I am your super intelligent AI platform. Four powerful modes: Business, Brand, Builder and Knowledge. What would you like to create today?')
   }, [user])
 
   useEffect(() => {
     if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight
   }, [messages])
 
-  const c = (name) => styles[name] || ''
-
   const getStyle = (prefix, m) => {
     const map = { biz: 'Biz', brand: 'Brand', builder: 'Builder', knowledge: 'Knowledge' }
-    return c(prefix + (map[m] || 'Biz'))
+    return styles[prefix + (map[m] || 'Biz')] || ''
   }
 
   const extractCode = (text) => {
@@ -59,10 +56,10 @@ export default function AppPage() {
       /(<!DOCTYPE html>[\s\S]*?<\/html>)/i,
       /```\n?([\s\S]*?<\/html>[\s\S]*?)```/i
     ]
-    for (const pattern of patterns) {
-      const match = text.match(pattern)
+    for (var i = 0; i < patterns.length; i++) {
+      var match = text.match(patterns[i])
       if (match) {
-        const code = match[1] || match[0]
+        var code = match[1] || match[0]
         if (code && (code.includes('<html') || code.includes('<!DOCTYPE'))) return code.trim()
       }
     }
@@ -72,13 +69,13 @@ export default function AppPage() {
   const switchMode = (m) => {
     setMode(m)
     resetConversation()
-    const cats = { biz: 'Business Plan', brand: 'Brand Identity', builder: 'Landing Page', knowledge: 'Universe & Space' }
+    var cats = { biz: 'Business Plan', brand: 'Brand Identity', builder: 'Landing Page', knowledge: 'Universe & Space' }
     setActiveCat(cats[m])
-    const msgs = {
-      biz: '📊 Business Mode activated. Analytical, strategic, structured. I will build you world-class business frameworks, investor pitches and growth strategies.',
-      brand: '✦ Brand Mode activated. Creative, visual, expressive. I will craft distinctive brand identities, campaigns and creative strategies.',
-      builder: '🏗️ Builder Mode activated. I will generate complete, stunning, deployable websites and apps. Describe what you want built.',
-      knowledge: '🌍 Knowledge Mode activated. Deep research on any topic. Ask me anything — from the origin of the universe to the future of AI.'
+    var msgs = {
+      biz: '📊 Business Mode activated. Analytical, strategic, structured.',
+      brand: '✦ Brand Mode activated. Creative, visual, expressive.',
+      builder: '🏗️ Builder Mode activated. I will generate complete, stunning, deployable websites and apps.',
+      knowledge: '🌍 Knowledge Mode activated. Deep research on any topic in the universe.'
     }
     addMessage('ai', msgs[m])
   }
@@ -86,18 +83,24 @@ export default function AppPage() {
   const handleCatChange = (cat) => {
     setActiveCat(cat)
     resetConversation()
-    addMessage('ai', `${MODE_CONFIG[mode].icon} Ready to work on ${cat}. Tell me what you need.`)
+    addMessage('ai', MODE_CONFIG[mode].icon + ' Ready for ' + cat + '. Tell me what you need.')
   }
 
   const addMessage = (who, text, isPrompt, cat, output) => {
-    setMessages(prev => [...prev, {
-      who, text: text || '', isPrompt: isPrompt || false,
-      cat: cat || '', output: output || '', id: Date.now() + Math.random()
-    }])
+    setMessages(function(prev) {
+      return prev.concat([{
+        who: who,
+        text: text || '',
+        isPrompt: isPrompt || false,
+        cat: cat || '',
+        output: output || '',
+        id: Date.now() + Math.random()
+      }])
+    })
   }
 
   const handleSend = async () => {
-    const msg = input.trim()
+    var msg = input.trim()
     if (!msg || loading) return
     if (!canGenerate) { setShowPaywall(true); return }
 
@@ -106,108 +109,76 @@ export default function AppPage() {
     setLoading(true)
 
     try {
-      const loadingMsgs = {
+      var loadingMsgs = {
         biz: '📊 Analysing and constructing your framework...',
         brand: '✦ Crafting your brand strategy...',
-        builder: '🏗️ Building your website — this may take a moment...',
+        builder: '🏗️ Building your website...',
         knowledge: '🌍 Researching deeply across all fields of knowledge...'
       }
       addMessage('ai', loadingMsgs[mode])
-      const result = await generatePrompt(msg, mode, activeCat)
+      var result = await generatePrompt(msg, mode, activeCat)
 
-      setMessages(prev => {
-        const copy = [...prev]
-        copy[copy.length - 1] = { ...copy[copy.length - 1], text: `${MODE_CONFIG[mode].icon} Here is your ${activeCat}:` }
+      setMessages(function(prev) {
+        var copy = prev.slice()
+        copy[copy.length - 1] = Object.assign({}, copy[copy.length - 1], {
+          text: MODE_CONFIG[mode].icon + ' Here is your ' + activeCat + ':'
+        })
         return copy
       })
 
       addMessage('ai', result, true, activeCat, result)
 
       if (user) {
-        await savePrompt(user.id, msg, result, mode, activeCat).catch(() => {})
-        const newUsed = promptsUsed + 1
+        await savePrompt(user.id, msg, result, mode, activeCat).catch(function() {})
+        var newUsed = promptsUsed + 1
         setPromptsUsed(newUsed)
-        await updatePromptsUsed(user.id, newUsed).catch(() => {})
+        await updatePromptsUsed(user.id, newUsed).catch(function() {})
         refreshPlan()
       }
 
       if (!isPro && trialLeft - 1 <= 0) {
-        setTimeout(() => {
-          addMessage('ai', 'You have used all your free prompts. Upgrade to Ortus Pro for unlimited access to all modes.')
+        setTimeout(function() {
+          addMessage('ai', 'You have used all your free prompts. Upgrade to Ortus Pro for unlimited access.')
           setShowPaywall(true)
         }, 1000)
       }
     } catch (err) {
-      addMessage('ai', '⚠️ Error: ' + err.message + '. Please try again.')
+      addMessage('ai', 'Error: ' + err.message)
     } finally {
       setLoading(false)
     }
   }
 
   const handleDeploy = (code) => {
-  if (!code) {
-    addMessage('ai', '⚠️ No code found to deploy. Try generating the website again and make sure to use Builder mode.')
-    return
-  }
-  try {
-    const blob = new Blob([code], { type: 'text/html' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'ortus-website.html'
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-    addMessage('ai', '✅ Website downloaded! Now go to netlify.com/drop and drag the file — your site will be live in 30 seconds! 🚀')
-  } catch (err) {
-    addMessage('ai', '⚠️ Download failed: ' + err.message)
-  }
-}
-  const blob = new Blob([code], { type: 'text/html' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = 'ortus-build.html'
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  URL.revokeObjectURL(url)
-  addMessage('ai', '✅ Your website has been downloaded! Now go to netlify.com/drop, drag and drop the file — your site will be live in 30 seconds!')
-}
-    setDeploying(true)
+    if (!code) {
+      addMessage('ai', 'No code found. Please generate a website first.')
+      return
+    }
     try {
-      const response = await fetch('/api/deploy', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          htmlCode: code,
-          siteName: 'ortus-' + Date.now()
-        })
-      })
-      const data = await response.json()
-      if (data.url) {
-        setPreviewUrl(data.url)
-        addMessage('ai', `🚀 Your website is LIVE at: ${data.url} — Click the link to see it!`)
-      } else {
-        throw new Error(data.error || 'Deploy failed')
-      }
+      var blob = new Blob([code], { type: 'text/html' })
+      var url = URL.createObjectURL(blob)
+      var a = document.createElement('a')
+      a.href = url
+      a.download = 'ortus-website.html'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      addMessage('ai', 'Website downloaded! Go to netlify.com/drop and drag the file — your site will be live in 30 seconds!')
     } catch (err) {
-      addMessage('ai', '⚠️ Deploy failed: ' + err.message + '. You can still copy the code and deploy manually on netlify.com')
-    } finally {
-      setDeploying(false)
+      addMessage('ai', 'Download failed: ' + err.message)
     }
   }
 
   const loadHistory = async () => {
     if (!user) return
-    const h = await getPromptHistory(user.id).catch(() => [])
+    var h = await getPromptHistory(user.id).catch(function() { return [] })
     setHistory(h || [])
     setShowHistory(true)
   }
 
   const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text).catch(() => {})
+    navigator.clipboard.writeText(text).catch(function() {})
   }
 
   const handleSignOut = async () => {
@@ -215,32 +186,34 @@ export default function AppPage() {
     navigate('/')
   }
 
-  const cats = mode === 'biz' ? BIZ_CATS : mode === 'brand' ? BRAND_CATS : mode === 'builder' ? BUILDER_CATS : KNOWLEDGE_CATS
-  const freeLeft = Math.max(0, 3 - promptsUsed)
+  var cats = mode === 'biz' ? BIZ_CATS : mode === 'brand' ? BRAND_CATS : mode === 'builder' ? BUILDER_CATS : KNOWLEDGE_CATS
+  var freeLeft = Math.max(0, 3 - promptsUsed)
 
   return (
     <div className={styles.app}>
       <div className={styles.topbar}>
         <div className={styles.logo}>ORT<span>US</span></div>
         <div className={styles.modeToggle}>
-          {Object.entries(MODE_CONFIG).map(([m, cfg]) => (
-            <button
-              key={m}
-              className={styles.modeBtn + ' ' + getStyle('mode', m) + (mode === m ? ' ' + styles.modeActive : '')}
-              onClick={() => switchMode(m)}
-            >{cfg.label}</button>
-          ))}
+          {Object.keys(MODE_CONFIG).map(function(m) {
+            return (
+              <button
+                key={m}
+                className={styles.modeBtn + ' ' + getStyle('mode', m) + (mode === m ? ' ' + styles.modeActive : '')}
+                onClick={function() { switchMode(m) }}
+              >{MODE_CONFIG[m].label}</button>
+            )
+          })}
         </div>
         <div className={styles.topRight}>
-          <button className={styles.iconBtn} onClick={loadHistory} title="History">⊙</button>
-          <button className={styles.iconBtn} onClick={handleSignOut} title="Sign out">↩</button>
+          <button className={styles.iconBtn} onClick={loadHistory}>⊙</button>
+          <button className={styles.iconBtn} onClick={handleSignOut}>↩</button>
         </div>
       </div>
 
       {!isPro && (
         <div className={styles.trialBar}>
-          <span>{freeLeft > 0 ? `✦ ${freeLeft} free prompt${freeLeft !== 1 ? 's' : ''} remaining` : '✦ Free trial ended'}</span>
-          <button onClick={() => setShowPaywall(true)}>UPGRADE TO PRO</button>
+          <span>{freeLeft > 0 ? '✦ ' + freeLeft + ' free prompt' + (freeLeft !== 1 ? 's' : '') + ' remaining' : '✦ Free trial ended'}</span>
+          <button onClick={function() { setShowPaywall(true) }}>UPGRADE TO PRO</button>
         </div>
       )}
       {isPro && (
@@ -250,66 +223,69 @@ export default function AppPage() {
       )}
 
       <div className={styles.cats}>
-        {cats.map(cat => (
-          <button
-            key={cat}
-            className={styles.cat + (activeCat === cat ? ' ' + getStyle('catActive', mode) : '')}
-            onClick={() => handleCatChange(cat)}
-          >{cat}</button>
-        ))}
+        {cats.map(function(cat) {
+          return (
+            <button
+              key={cat}
+              className={styles.cat + (activeCat === cat ? ' ' + getStyle('catActive', mode) : '')}
+              onClick={function() { handleCatChange(cat) }}
+            >{cat}</button>
+          )
+        })}
       </div>
 
       <div className={styles.chat} ref={chatRef}>
-        {messages.map(msg => (
-          <div key={msg.id} className={styles.msg + (msg.who === 'user' ? ' ' + styles.userMsg : '')}>
-            <div className={styles.avatar + ' ' + (msg.who === 'user' ? styles.avatarUser : getStyle('avatar', mode))}>
-              {msg.who === 'user' ? (user?.user_metadata?.full_name?.[0] ?? 'U') : 'O'}
-            </div>
-            <div className={styles.msgBody}>
-              <div className={styles.msgName + (msg.who !== 'user' ? ' ' + getStyle('name', mode) : '')}>
-                {msg.who === 'user' ? 'You' : `Ortus · ${MODE_CONFIG[mode]?.label}`}
+        {messages.map(function(msg) {
+          return (
+            <div key={msg.id} className={styles.msg + (msg.who === 'user' ? ' ' + styles.userMsg : '')}>
+              <div className={styles.avatar + ' ' + (msg.who === 'user' ? styles.avatarUser : getStyle('avatar', mode))}>
+                {msg.who === 'user' ? 'U' : 'O'}
               </div>
-              {msg.isPrompt ? (
-                <div className={styles.outputCard + ' ' + getStyle('output', mode)}>
-                  <div className={styles.outputLabel + ' ' + getStyle('label', mode)}>
-                    {MODE_CONFIG[mode]?.icon} {msg.cat}
-                  </div>
-                  <div className={styles.outputText}>{msg.output}</div>
-                  <div className={styles.outputActions}>
-                    <span className={styles.outputType}>Ortus · {MODE_CONFIG[mode]?.label}</span>
-                    <div className={styles.actionBtns}>
-                      <button className={styles.actBtn + ' ' + getStyle('act', mode)} onClick={() => copyToClipboard(msg.output)}>Copy</button>
-                      {mode === 'builder' && (
-                        <>
-                          <button
-                            className={styles.actBtn + ' ' + styles.actBuilder}
-                            onClick={() => { setPreviewCode(extractCode(msg.output)); setShowPreview(true) }}
-                          >Preview</button>
-                          <button
-                            className={styles.actBtn + ' ' + styles.actBuilder}
-                            onClick={() => handleDeploy(extractCode(msg.output))}
-                            disabled={deploying}
-                          >{deploying ? 'Deploying...' : '🚀 Deploy'}</button>
-                        </>
-                      )}
-                      <button
-                        className={styles.actBtn + ' ' + getStyle('act', mode)}
-                        onClick={() => setInput('Refine this further — make it more detailed, more powerful and more complete')}
-                      >Refine</button>
-                    </div>
-                  </div>
-                  {previewUrl && mode === 'builder' && (
-                    <div className={styles.liveUrl}>
-                      🌐 Live: <a href={previewUrl} target="_blank" rel="noreferrer">{previewUrl}</a>
-                    </div>
-                  )}
+              <div className={styles.msgBody}>
+                <div className={styles.msgName + (msg.who !== 'user' ? ' ' + getStyle('name', mode) : '')}>
+                  {msg.who === 'user' ? 'You' : 'Ortus · ' + (MODE_CONFIG[mode] ? MODE_CONFIG[mode].label : '')}
                 </div>
-              ) : (
-                <div className={styles.bubble}>{msg.text}</div>
-              )}
+                {msg.isPrompt ? (
+                  <div className={styles.outputCard + ' ' + getStyle('output', mode)}>
+                    <div className={styles.outputLabel + ' ' + getStyle('label', mode)}>
+                      {MODE_CONFIG[mode] ? MODE_CONFIG[mode].icon : ''} {msg.cat}
+                    </div>
+                    <div className={styles.outputText}>{msg.output}</div>
+                    <div className={styles.outputActions}>
+                      <span className={styles.outputType}>Ortus · {MODE_CONFIG[mode] ? MODE_CONFIG[mode].label : ''}</span>
+                      <div className={styles.actionBtns}>
+                        <button className={styles.actBtn + ' ' + getStyle('act', mode)} onClick={function() { copyToClipboard(msg.output) }}>Copy</button>
+                        {mode === 'builder' && (
+                          <button
+                            className={styles.actBtn + ' ' + styles.actBuilder}
+                            onClick={function() { var code = extractCode(msg.output); setPreviewCode(code || msg.output); setShowPreview(true) }}
+                          >Preview</button>
+                        )}
+                        {mode === 'builder' && (
+                          <button
+                            className={styles.actBtn + ' ' + styles.actBuilder}
+                            onClick={function() { handleDeploy(extractCode(msg.output) || msg.output) }}
+                          >Deploy</button>
+                        )}
+                        <button
+                          className={styles.actBtn + ' ' + getStyle('act', mode)}
+                          onClick={function() { setInput('Refine this further with more depth and detail') }}
+                        >Refine</button>
+                      </div>
+                    </div>
+                    {previewUrl && mode === 'builder' && (
+                      <div className={styles.liveUrl}>
+                        Live: <a href={previewUrl} target="_blank" rel="noreferrer">{previewUrl}</a>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className={styles.bubble}>{msg.text}</div>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
         {loading && (
           <div className={styles.msg}>
             <div className={styles.avatar + ' ' + getStyle('avatar', mode)}>O</div>
@@ -327,9 +303,9 @@ export default function AppPage() {
           <textarea
             className={styles.inputBox + ' ' + getStyle('input', mode)}
             value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() } }}
-            placeholder={MODE_CONFIG[mode]?.placeholder}
+            onChange={function(e) { setInput(e.target.value) }}
+            onKeyDown={function(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() } }}
+            placeholder={MODE_CONFIG[mode] ? MODE_CONFIG[mode].placeholder : ''}
             rows={1}
           />
           <button
@@ -350,22 +326,17 @@ export default function AppPage() {
           <div className={styles.previewHeader}>
             <span className={styles.previewTitle}>🏗️ Live Preview</span>
             <div className={styles.previewActions}>
-              <button className={styles.actBtn + ' ' + styles.actBuilder} onClick={() => copyToClipboard(previewCode)}>Copy Code</button>
-              <button
-                className={styles.actBtn + ' ' + styles.actBuilder}
-                onClick={() => handleDeploy(previewCode)}
-                disabled={deploying}
-              >{deploying ? 'Deploying...' : '🚀 Deploy Live'}</button>
-              <button className={styles.closeBtn} onClick={() => setShowPreview(false)}>✕ Close</button>
+              <button className={styles.actBtn + ' ' + styles.actBuilder} onClick={function() { copyToClipboard(previewCode) }}>Copy Code</button>
+              <button className={styles.actBtn + ' ' + styles.actBuilder} onClick={function() { handleDeploy(previewCode) }}>Deploy</button>
+              <button className={styles.closeBtn} onClick={function() { setShowPreview(false) }}>Close</button>
             </div>
           </div>
           <iframe
-  srcDoc={previewCode}
-  className={styles.previewFrame}
-  title="Preview"
-  sandbox="allow-scripts allow-same-origin allow-forms"
-  style={{ flex: 1, border: 'none', width: '100%', minHeight: '500px', background: 'white', display: 'block' }}
-/>
+            srcDoc={previewCode}
+            className={styles.previewFrame}
+            title="Preview"
+            sandbox="allow-scripts allow-same-origin"
+          />
         </div>
       )}
 
@@ -373,22 +344,24 @@ export default function AppPage() {
         <div className={styles.drawer}>
           <div className={styles.drawerHead}>
             <span className="label">History</span>
-            <button className={styles.closeBtn} onClick={() => setShowHistory(false)}>✕</button>
+            <button className={styles.closeBtn} onClick={function() { setShowHistory(false) }}>✕</button>
           </div>
           <div className={styles.drawerList}>
             {history.length === 0 && <p className={styles.emptyNote}>No history yet.</p>}
-            {history.map(h => (
-              <div key={h.id} className={styles.historyItem} onClick={() => { setInput(h.prompt); setShowHistory(false) }}>
-                <div className={styles.historyMode + ' ' + getStyle('label', h.mode)}>{MODE_CONFIG[h.mode]?.icon} {h.category}</div>
-                <div className={styles.historyPrompt}>{h.prompt}</div>
-                <div className={styles.historyDate}>{new Date(h.created_at).toLocaleDateString()}</div>
-              </div>
-            ))}
+            {history.map(function(h) {
+              return (
+                <div key={h.id} className={styles.historyItem} onClick={function() { setInput(h.prompt); setShowHistory(false) }}>
+                  <div className={styles.historyMode + ' ' + getStyle('label', h.mode)}>{MODE_CONFIG[h.mode] ? MODE_CONFIG[h.mode].icon : ''} {h.category}</div>
+                  <div className={styles.historyPrompt}>{h.prompt}</div>
+                  <div className={styles.historyDate}>{new Date(h.created_at).toLocaleDateString()}</div>
+                </div>
+              )
+            })}
           </div>
         </div>
       )}
 
-      {showPaywall && <Paywall onClose={() => setShowPaywall(false)} onSuccess={refreshPlan} />}
+      {showPaywall && <Paywall onClose={function() { setShowPaywall(false) }} onSuccess={refreshPlan} />}
     </div>
   )
 }
