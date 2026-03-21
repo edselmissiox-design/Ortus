@@ -345,7 +345,10 @@
   flex: 1;
   border: none;
   width: 100%;
+  min-height: 500px;
   background: white;
+  display: block;
+}
 }
 .drawer {
   position: absolute;
