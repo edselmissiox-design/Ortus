@@ -19,7 +19,7 @@ const MODE_CONFIG = {
 }
 
 export default function AppPage() {
-  const { user, isPro, trialLeft, canGenerate, refreshPlan } = useAuth()
+  const { user, isPro, canGenerate, refreshPlan } = useAuth()
   const navigate = useNavigate()
   const [mode, setMode] = useState('biz')
   const [activeCat, setActiveCat] = useState('Business Plan')
@@ -33,6 +33,9 @@ export default function AppPage() {
   const [history, setHistory] = useState([])
   const [promptsUsed, setPromptsUsed] = useState(0)
   const chatRef = useRef(null)
+
+  const freeLimit = 3
+  const isFreeLimitReached = !isPro && promptsUsed >= freeLimit
 
   useEffect(() => {
     if (!user) { navigate('/login'); return }
@@ -100,7 +103,12 @@ export default function AppPage() {
   const handleSend = async () => {
     const msg = input.trim()
     if (!msg || loading) return
-    if (!canGenerate) { setShowPaywall(true); return }
+
+    if (isFreeLimitReached) {
+      setShowPaywall(true)
+      addMessage('ai', 'You have used all 3 free prompts. Upgrade to Ortus Pro for unlimited access.', false, '', '')
+      return
+    }
 
     setInput('')
     addMessage('user', msg, false, '', '')
@@ -127,13 +135,13 @@ export default function AppPage() {
         setPromptsUsed(newUsed)
         await updatePromptsUsed(user.id, newUsed).catch(() => {})
         refreshPlan()
-      }
 
-      if (!isPro && trialLeft - 1 <= 0) {
-        setTimeout(() => {
-          addMessage('ai', 'You have used all your free prompts. Upgrade to Ortus Pro for unlimited access.', false, '', '')
-          setShowPaywall(true)
-        }, 1000)
+        if (!isPro && newUsed >= freeLimit) {
+          setTimeout(() => {
+            addMessage('ai', 'You have used all 3 free prompts. Upgrade to Ortus Pro for unlimited access.', false, '', '')
+            setShowPaywall(true)
+          }, 1000)
+        }
       }
     } catch (err) {
       addMessage('ai', 'Error: ' + err.message, false, '', '')
@@ -144,7 +152,7 @@ export default function AppPage() {
 
   const handleDeploy = (code) => {
     if (!code || code.trim() === '') {
-      addMessage('ai', 'No code to deploy. Please generate a website first.', false, '', '')
+      addMessage('ai', 'No code to download. Please generate a website first.', false, '', '')
       return
     }
     try {
@@ -157,7 +165,7 @@ export default function AppPage() {
       a.click()
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
-      addMessage('ai', '✅ Website downloaded! Open the file in Chrome to preview it, or drag it to netlify.com/drop to make it live in 30 seconds!', false, '', '')
+      addMessage('ai', '✅ Website downloaded! Double click the file to preview it, or drag it to netlify.com/drop to make it live!', false, '', '')
     } catch (err) {
       addMessage('ai', 'Download failed: ' + err.message, false, '', '')
     }
@@ -184,9 +192,7 @@ export default function AppPage() {
       document.body.removeChild(el)
       addMessage('ai', '✅ Copied to clipboard!', false, '', '')
     } catch (err) {
-      navigator.clipboard.writeText(text).catch(() => {
-        addMessage('ai', '⚠️ Copy failed. Please select the text manually.', false, '', '')
-      })
+      navigator.clipboard.writeText(text).catch(() => {})
     }
   }
 
@@ -196,7 +202,7 @@ export default function AppPage() {
   }
 
   const cats = mode === 'biz' ? BIZ_CATS : mode === 'brand' ? BRAND_CATS : mode === 'builder' ? BUILDER_CATS : KNOWLEDGE_CATS
-  const freeLeft = Math.max(0, 3 - promptsUsed)
+  const freeLeft = Math.max(0, freeLimit - promptsUsed)
 
   return (
     <div className={styles.app}>
@@ -219,7 +225,7 @@ export default function AppPage() {
 
       {!isPro && (
         <div className={styles.trialBar}>
-          <span>{freeLeft > 0 ? '✦ ' + freeLeft + ' free prompt' + (freeLeft !== 1 ? 's' : '') + ' remaining' : '✦ Free trial ended'}</span>
+          <span>{freeLeft > 0 ? '✦ ' + freeLeft + ' free prompt' + (freeLeft !== 1 ? 's' : '') + ' remaining' : '✦ Free trial ended — upgrade to continue'}</span>
           <button onClick={() => setShowPaywall(true)}>UPGRADE TO PRO</button>
         </div>
       )}
@@ -266,11 +272,10 @@ export default function AppPage() {
                         <button
                           className={styles.actBtn + ' ' + styles.actBuilder}
                           onClick={() => {
-  const code = extractCode(msg.output) || msg.output
-  const blob = new Blob([code], { type: 'text/html' })
-  const url = URL.createObjectURL(blob)
-  window.open(url, '_blank')
-}}
+                            const code = extractCode(msg.output) || msg.output
+                            setPreviewCode(code)
+                            setShowPreview(true)
+                          }}
                         >Preview</button>
                       )}
                       {mode === 'builder' && (
@@ -333,17 +338,17 @@ export default function AppPage() {
             <span className={styles.previewTitle}>🏗️ Live Preview</span>
             <div className={styles.previewActions}>
               <button className={styles.actBtn + ' ' + styles.actBuilder} onClick={() => copyToClipboard(previewCode)}>Copy Code</button>
-              <button className={styles.actBtn + ' ' + styles.actBuilder} onClick={() => handleDeploy(previewCode)}>Deploy</button>
+              <button className={styles.actBtn + ' ' + styles.actBuilder} onClick={() => handleDeploy(previewCode)}>⬇ Download</button>
               <button className={styles.closeBtn} onClick={() => setShowPreview(false)}>✕ Close</button>
             </div>
           </div>
           <iframe
-  srcDoc={previewCode}
-  className={styles.previewFrame}
-  title="Preview"
-  sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
-  style={{width:'100%', height:'100%', minHeight:'600px', border:'none', background:'white', display:'block', flex:1}}
-/>
+            srcDoc={previewCode}
+            className={styles.previewFrame}
+            title="Preview"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+            style={{width:'100%', height:'100%', minHeight:'600px', border:'none', background:'white', display:'block', flex:1}}
+          />
         </div>
       )}
 
