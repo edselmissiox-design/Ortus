@@ -172,14 +172,22 @@ export default function AppPage() {
 
   const copyToClipboard = (text) => {
     if (!text) return
-    navigator.clipboard.writeText(text).catch(() => {
+    try {
       const el = document.createElement('textarea')
       el.value = text
+      el.style.position = 'fixed'
+      el.style.opacity = '0'
       document.body.appendChild(el)
+      el.focus()
       el.select()
       document.execCommand('copy')
       document.body.removeChild(el)
-    })
+      addMessage('ai', '✅ Copied to clipboard!', false, '', '')
+    } catch (err) {
+      navigator.clipboard.writeText(text).catch(() => {
+        addMessage('ai', '⚠️ Copy failed. Please select the text manually.', false, '', '')
+      })
+    }
   }
 
   const handleSignOut = async () => {
