@@ -157,7 +157,7 @@ export default function AppPage() {
       a.click()
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
-      addMessage('ai', '✅ Website downloaded! Go to netlify.com/drop and drag the file — your site will be live in 30 seconds!', false, '', '')
+      addMessage('ai', '✅ Website downloaded! Open the file in Chrome to preview it, or drag it to netlify.com/drop to make it live in 30 seconds!', false, '', '')
     } catch (err) {
       addMessage('ai', 'Download failed: ' + err.message, false, '', '')
     }
@@ -277,7 +277,7 @@ export default function AppPage() {
                         <button
                           className={styles.actBtn + ' ' + styles.actBuilder}
                           onClick={() => handleDeploy(extractCode(msg.output) || msg.output)}
-                        >Deploy</button>
+                        >⬇ Download</button>
                       )}
                       <button
                         className={styles.actBtn + ' ' + getStyle('act', mode)}
