@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/AuthContext'
 import { generatePrompt, resetConversation } from '../lib/ai'
-import { savePrompt, getPromptHistory, signOut, updatePromptsUsed } from '../lib/supabase'
+import { savePrompt, getPromptHistory, signOut, updatePromptsUsed, getUserPlan } from '../lib/supabase'
 import Paywall from '../components/Paywall'
 import styles from './App.module.css'
 
@@ -32,25 +32,28 @@ export default function AppPage() {
   const [previewCode, setPreviewCode] = useState('')
   const [history, setHistory] = useState([])
   const [promptsUsed, setPromptsUsed] = useState(0)
-
-useEffect(() => {
-  if (user && !isPro) {
-    getUserPlanLocal(user.id)
-  }
-}, [user, isPro])
   const chatRef = useRef(null)
-
   const freeLimit = 3
-  const isFreeLimitReached = !isPro && promptsUsed >= freeLimit
 
   useEffect(() => {
     if (!user) { navigate('/login'); return }
     addMessage('ai', 'Welcome to Ortus. Four powerful AI modes: Business, Brand, Builder and Knowledge. What would you like to create today?')
+    if (!isPro) loadUserPrompts()
   }, [user])
 
   useEffect(() => {
     if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight
   }, [messages])
+
+  const loadUserPrompts = async () => {
+    if (!user) return
+    try {
+      const plan = await getUserPlan(user.id)
+      setPromptsUsed(plan?.prompts_used || 0)
+    } catch (e) {
+      setPromptsUsed(0)
+    }
+  }
 
   const getStyle = (prefix, m) => {
     const map = { biz: 'Biz', brand: 'Brand', builder: 'Builder', knowledge: 'Knowledge' }
@@ -110,7 +113,7 @@ useEffect(() => {
     const msg = input.trim()
     if (!msg || loading) return
 
-    if (isFreeLimitReached) {
+    if (!isPro && promptsUsed >= freeLimit) {
       setShowPaywall(true)
       addMessage('ai', 'You have used all 3 free prompts. Upgrade to Ortus Pro for unlimited access.', false, '', '')
       return
