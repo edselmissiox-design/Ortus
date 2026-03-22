@@ -266,10 +266,11 @@ export default function AppPage() {
                         <button
                           className={styles.actBtn + ' ' + styles.actBuilder}
                           onClick={() => {
-                            const code = extractCode(msg.output) || msg.output
-                            setPreviewCode(code)
-                            setShowPreview(true)
-                          }}
+  const code = extractCode(msg.output) || msg.output
+  const blob = new Blob([code], { type: 'text/html' })
+  const url = URL.createObjectURL(blob)
+  window.open(url, '_blank')
+}}
                         >Preview</button>
                       )}
                       {mode === 'builder' && (
