@@ -37,12 +37,14 @@ export const AuthProvider = ({ children }) => {
 
   const refreshPlan = () => user && loadPlan(user.id)
 
-  const isPro = plan?.plan === 'pro' || plan?.plan === 'team'
-  const trialLeft = Math.max(0, (plan?.prompts_limit ?? 3) - (plan?.prompts_used ?? 0))
+  const isPro = plan?.plan === 'pro' || plan?.plan === 'team' || plan?.plan === 'starter'
+  const promptsUsed = plan?.prompts_used ?? 0
+  const promptsLimit = plan?.prompts_limit ?? 3
+  const trialLeft = Math.max(0, promptsLimit - promptsUsed)
   const canGenerate = isPro || trialLeft > 0
 
   return (
-    <AuthContext.Provider value={{ user, plan, loading, isPro, trialLeft, canGenerate, refreshPlan }}>
+    <AuthContext.Provider value={{ user, plan, loading, isPro, trialLeft, canGenerate, refreshPlan, promptsUsed, promptsLimit }}>
       {children}
     </AuthContext.Provider>
   )
