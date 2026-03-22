@@ -32,6 +32,12 @@ export default function AppPage() {
   const [previewCode, setPreviewCode] = useState('')
   const [history, setHistory] = useState([])
   const [promptsUsed, setPromptsUsed] = useState(0)
+
+useEffect(() => {
+  if (user && !isPro) {
+    getUserPlanLocal(user.id)
+  }
+}, [user, isPro])
   const chatRef = useRef(null)
 
   const freeLimit = 3
