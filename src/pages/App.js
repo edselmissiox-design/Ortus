@@ -76,17 +76,18 @@ export default function AppPage() {
     return null
   }
 
-  const openPreview = (code) => {
+  const openPreview = async (code) => {
     if (!code) return
     try {
-      const encoded = btoa(unescape(encodeURIComponent(code)))
-      const dataUrl = 'data:text/html;base64,' + encoded
-      const newWin = window.open(dataUrl, '_blank')
-      if (!newWin) {
-        const blob = new Blob([code], { type: 'text/html' })
-        const url = URL.createObjectURL(blob)
-        window.open(url, '_blank')
-      }
+      const response = await fetch('/api/preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ html: code })
+      })
+      const html = await response.text()
+      const blob = new Blob([html], { type: 'text/html' })
+      const url = URL.createObjectURL(blob)
+      window.open(url, '_blank')
     } catch (e) {
       const blob = new Blob([code], { type: 'text/html' })
       const url = URL.createObjectURL(blob)
