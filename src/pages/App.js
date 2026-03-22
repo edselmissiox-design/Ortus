@@ -338,11 +338,12 @@ export default function AppPage() {
             </div>
           </div>
           <iframe
-            srcDoc={previewCode}
-            className={styles.previewFrame}
-            title="Preview"
-            sandbox="allow-scripts allow-same-origin allow-forms"
-          />
+  srcDoc={previewCode}
+  className={styles.previewFrame}
+  title="Preview"
+  sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
+  style={{width:'100%', height:'100%', minHeight:'600px', border:'none', background:'white', display:'block', flex:1}}
+/>
         </div>
       )}
 
