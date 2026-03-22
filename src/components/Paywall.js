@@ -57,12 +57,12 @@ export default function Paywall({ onClose, onSuccess }) {
       })
 
       const data = await response.json()
-
       if (data.error) throw new Error(data.error)
-
-      // Redirect to Stripe checkout
-      window.location.href = data.url
-
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        throw new Error('No checkout URL returned')
+      }
     } catch (err) {
       setError(err.message)
       setLoading(false)
@@ -77,7 +77,7 @@ export default function Paywall({ onClose, onSuccess }) {
         <div className={styles.header}>
           <div className={styles.icon}>✦</div>
           <h2 className={styles.title}>Unlock <span>Ortus</span></h2>
-          <p className={styles.sub}>Your free trial has ended. Choose a plan to keep building powerful AI prompts, websites and more.</p>
+          <p className={styles.sub}>Your free trial has ended. Choose a plan to keep building.</p>
         </div>
 
         <div className={styles.plans}>
