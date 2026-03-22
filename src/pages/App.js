@@ -14,12 +14,12 @@ const KNOWLEDGE_CATS = ['Universe & Space', 'Science & Physics', 'History & Phil
 const MODE_CONFIG = {
   biz: { label: 'Business', icon: '📊', placeholder: 'e.g. Build me an investor pitch for a fragrance brand raising £500k...' },
   brand: { label: 'Brand', icon: '✦', placeholder: 'e.g. Create a complete brand identity for a luxury streetwear label...' },
-  builder: { label: 'Builder', icon: '🏗️', placeholder: 'e.g. Build me a stunning landing page for a fragrance brand called Missiox...' },
+  builder: { label: 'Builder', icon: '🏗️', placeholder: 'e.g. Build me a stunning landing page for a fragrance brand called Missiox with dark green and red colours...' },
   knowledge: { label: 'Knowledge', icon: '🌍', placeholder: 'e.g. Explain how the universe was created and what existed before the Big Bang...' }
 }
 
 export default function AppPage() {
-  const { user, isPro, canGenerate, refreshPlan } = useAuth()
+  const { user, isPro, refreshPlan } = useAuth()
   const navigate = useNavigate()
   const [mode, setMode] = useState('biz')
   const [activeCat, setActiveCat] = useState('Business Plan')
@@ -28,8 +28,6 @@ export default function AppPage() {
   const [loading, setLoading] = useState(false)
   const [showPaywall, setShowPaywall] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
-  const [showPreview, setShowPreview] = useState(false)
-  const [previewCode, setPreviewCode] = useState('')
   const [history, setHistory] = useState([])
   const [promptsUsed, setPromptsUsed] = useState(0)
   const chatRef = useRef(null)
@@ -37,8 +35,8 @@ export default function AppPage() {
 
   useEffect(() => {
     if (!user) { navigate('/login'); return }
-    addMessage('ai', 'Welcome to Ortus. Four powerful AI modes: Business, Brand, Builder and Knowledge. What would you like to create today?')
-    if (!isPro) loadUserPrompts()
+    addMessage('ai', 'Welcome to Ortus. Four powerful AI modes — Business, Brand, Builder and Knowledge. What would you like to create today?')
+    loadUserPrompts()
   }, [user])
 
   useEffect(() => {
@@ -78,16 +76,34 @@ export default function AppPage() {
     return null
   }
 
+  const openPreview = (code) => {
+    if (!code) return
+    try {
+      const encoded = btoa(unescape(encodeURIComponent(code)))
+      const dataUrl = 'data:text/html;base64,' + encoded
+      const newWin = window.open(dataUrl, '_blank')
+      if (!newWin) {
+        const blob = new Blob([code], { type: 'text/html' })
+        const url = URL.createObjectURL(blob)
+        window.open(url, '_blank')
+      }
+    } catch (e) {
+      const blob = new Blob([code], { type: 'text/html' })
+      const url = URL.createObjectURL(blob)
+      window.open(url, '_blank')
+    }
+  }
+
   const switchMode = (m) => {
     setMode(m)
     resetConversation()
     const cats = { biz: 'Business Plan', brand: 'Brand Identity', builder: 'Landing Page', knowledge: 'Universe & Space' }
     setActiveCat(cats[m])
     const msgs = {
-      biz: '📊 Business Mode activated.',
-      brand: '✦ Brand Mode activated.',
-      builder: '🏗️ Builder Mode activated. Describe what you want built.',
-      knowledge: '🌍 Knowledge Mode activated. Ask me anything.'
+      biz: '📊 Business Mode — analytical, strategic, structured. Tell me what you need.',
+      brand: '✦ Brand Mode — creative, visual, expressive. Tell me about your brand.',
+      builder: '🏗️ Builder Mode — describe your website or app and I will build it completely.',
+      knowledge: '🌍 Knowledge Mode — ask me anything about the universe, science, history or technology.'
     }
     addMessage('ai', msgs[m])
   }
@@ -95,18 +111,18 @@ export default function AppPage() {
   const handleCatChange = (cat) => {
     setActiveCat(cat)
     resetConversation()
+    addMessage('ai', MODE_CONFIG[mode].icon + ' Ready for ' + cat + '. Tell me what you need.')
   }
 
   const addMessage = (who, text, isPrompt, cat, output) => {
-    const newMsg = {
-      who: who,
+    setMessages(prev => [...prev, {
+      who,
       text: text || '',
       isPrompt: isPrompt === true,
       cat: cat || '',
       output: output || '',
       id: Date.now() + Math.random()
-    }
-    setMessages(prev => [...prev, newMsg])
+    }])
   }
 
   const handleSend = async () => {
@@ -115,24 +131,28 @@ export default function AppPage() {
 
     if (!isPro && promptsUsed >= freeLimit) {
       setShowPaywall(true)
-      addMessage('ai', 'You have used all 3 free prompts. Upgrade to Ortus Pro for unlimited access.', false, '', '')
+      addMessage('ai', 'You have used all 3 free prompts. Upgrade to Ortus Pro for unlimited access.')
       return
     }
 
     setInput('')
-    addMessage('user', msg, false, '', '')
+    addMessage('user', msg)
     setLoading(true)
 
+    const loadingMsgs = {
+      biz: '📊 Analysing and constructing your framework...',
+      brand: '✦ Crafting your brand strategy...',
+      builder: '🏗️ Building your website — this takes about 15 seconds...',
+      knowledge: '🌍 Researching deeply across all fields of knowledge...'
+    }
+
     try {
-      addMessage('ai', mode === 'builder' ? '🏗️ Building your website...' : '⏳ Generating...', false, '', '')
+      addMessage('ai', loadingMsgs[mode])
       const result = await generatePrompt(msg, mode, activeCat)
 
       setMessages(prev => {
         const copy = [...prev]
-        copy[copy.length - 1] = {
-          ...copy[copy.length - 1],
-          text: 'Here is your ' + activeCat + ':'
-        }
+        copy[copy.length - 1] = { ...copy[copy.length - 1], text: MODE_CONFIG[mode].icon + ' Here is your ' + activeCat + ':' }
         return copy
       })
 
@@ -147,21 +167,21 @@ export default function AppPage() {
 
         if (!isPro && newUsed >= freeLimit) {
           setTimeout(() => {
-            addMessage('ai', 'You have used all 3 free prompts. Upgrade to Ortus Pro for unlimited access.', false, '', '')
+            addMessage('ai', 'You have used all 3 free prompts. Upgrade to Ortus Pro for unlimited access.')
             setShowPaywall(true)
-          }, 1000)
+          }, 1200)
         }
       }
     } catch (err) {
-      addMessage('ai', 'Error: ' + err.message, false, '', '')
+      addMessage('ai', '⚠️ Error: ' + err.message + '. Please try again.')
     } finally {
       setLoading(false)
     }
   }
 
-  const handleDeploy = (code) => {
+  const handleDownload = (code) => {
     if (!code || code.trim() === '') {
-      addMessage('ai', 'No code to download. Please generate a website first.', false, '', '')
+      addMessage('ai', 'No code to download. Please generate a website first.')
       return
     }
     try {
@@ -174,9 +194,9 @@ export default function AppPage() {
       a.click()
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
-      addMessage('ai', '✅ Website downloaded! Double click the file to preview it, or drag it to netlify.com/drop to make it live!', false, '', '')
+      addMessage('ai', '✅ Website downloaded! You can also drag it to netlify.com/drop to make it live in 30 seconds!')
     } catch (err) {
-      addMessage('ai', 'Download failed: ' + err.message, false, '', '')
+      addMessage('ai', 'Download failed: ' + err.message)
     }
   }
 
@@ -199,7 +219,7 @@ export default function AppPage() {
       el.select()
       document.execCommand('copy')
       document.body.removeChild(el)
-      addMessage('ai', '✅ Copied to clipboard!', false, '', '')
+      addMessage('ai', '✅ Copied to clipboard!')
     } catch (err) {
       navigator.clipboard.writeText(text).catch(() => {})
     }
@@ -227,18 +247,17 @@ export default function AppPage() {
           ))}
         </div>
         <div className={styles.topRight}>
-          <button className={styles.iconBtn} onClick={loadHistory}>⊙</button>
-          <button className={styles.iconBtn} onClick={handleSignOut}>↩</button>
+          <button className={styles.iconBtn} onClick={loadHistory} title="Prompt history">⊙</button>
+          <button className={styles.iconBtn} onClick={handleSignOut} title="Sign out">↩</button>
         </div>
       </div>
 
-      {!isPro && (
+      {!isPro ? (
         <div className={styles.trialBar}>
-          <span>{freeLeft > 0 ? '✦ ' + freeLeft + ' free prompt' + (freeLeft !== 1 ? 's' : '') + ' remaining' : '✦ Free trial ended — upgrade to continue'}</span>
+          <span>{freeLeft > 0 ? '✦ ' + freeLeft + ' free prompt' + (freeLeft !== 1 ? 's' : '') + ' remaining' : '✦ Free trial ended'}</span>
           <button onClick={() => setShowPaywall(true)}>UPGRADE TO PRO</button>
         </div>
-      )}
-      {isPro && (
+      ) : (
         <div className={styles.trialBar + ' ' + styles.proBanner}>
           <span>✦ Ortus Pro — Unlimited · Business · Brand · Builder · Knowledge</span>
         </div>
@@ -273,30 +292,14 @@ export default function AppPage() {
                   <div className={styles.outputActions}>
                     <span className={styles.outputType}>Ortus · {MODE_CONFIG[mode].label}</span>
                     <div className={styles.actionBtns}>
-                      <button
-                        className={styles.actBtn + ' ' + getStyle('act', mode)}
-                        onClick={() => copyToClipboard(msg.output)}
-                      >Copy</button>
+                      <button className={styles.actBtn + ' ' + getStyle('act', mode)} onClick={() => copyToClipboard(msg.output)}>Copy</button>
                       {mode === 'builder' && (
-                        <button
-                          className={styles.actBtn + ' ' + styles.actBuilder}
-                          onClick={() => {
-                            const code = extractCode(msg.output) || msg.output
-                            setPreviewCode(code)
-                            setShowPreview(true)
-                          }}
-                        >Preview</button>
+                        <button className={styles.actBtn + ' ' + styles.actBuilder} onClick={() => openPreview(extractCode(msg.output) || msg.output)}>👁 Preview</button>
                       )}
                       {mode === 'builder' && (
-                        <button
-                          className={styles.actBtn + ' ' + styles.actBuilder}
-                          onClick={() => handleDeploy(extractCode(msg.output) || msg.output)}
-                        >⬇ Download</button>
+                        <button className={styles.actBtn + ' ' + styles.actBuilder} onClick={() => handleDownload(extractCode(msg.output) || msg.output)}>⬇ Download</button>
                       )}
-                      <button
-                        className={styles.actBtn + ' ' + getStyle('act', mode)}
-                        onClick={() => setInput('Refine this with more depth and detail')}
-                      >Refine</button>
+                      <button className={styles.actBtn + ' ' + getStyle('act', mode)} onClick={() => setInput('Refine this with more depth and detail')}>Refine</button>
                     </div>
                   </div>
                 </div>
@@ -328,11 +331,7 @@ export default function AppPage() {
             placeholder={MODE_CONFIG[mode].placeholder}
             rows={1}
           />
-          <button
-            className={styles.sendBtn + ' ' + getStyle('send', mode)}
-            onClick={handleSend}
-            disabled={loading}
-          >
+          <button className={styles.sendBtn + ' ' + getStyle('send', mode)} onClick={handleSend} disabled={loading}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="22" y1="2" x2="11" y2="13"/>
               <polygon points="22 2 15 22 11 13 2 9 22 2"/>
@@ -340,26 +339,6 @@ export default function AppPage() {
           </button>
         </div>
       </div>
-
-      {showPreview && (
-        <div className={styles.previewOverlay}>
-          <div className={styles.previewHeader}>
-            <span className={styles.previewTitle}>🏗️ Live Preview</span>
-            <div className={styles.previewActions}>
-              <button className={styles.actBtn + ' ' + styles.actBuilder} onClick={() => copyToClipboard(previewCode)}>Copy Code</button>
-              <button className={styles.actBtn + ' ' + styles.actBuilder} onClick={() => handleDeploy(previewCode)}>⬇ Download</button>
-              <button className={styles.closeBtn} onClick={() => setShowPreview(false)}>✕ Close</button>
-            </div>
-          </div>
-          <iframe
-            srcDoc={previewCode}
-            className={styles.previewFrame}
-            title="Preview"
-            sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
-            style={{width:'100%', height:'100%', minHeight:'600px', border:'none', background:'white', display:'block', flex:1}}
-          />
-        </div>
-      )}
 
       {showHistory && (
         <div className={styles.drawer}>
